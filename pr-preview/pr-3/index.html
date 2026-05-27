@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DE Office Battaramulla - Letter Management</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f7;min-height:100vh}
+input,select,textarea,button{font-family:inherit}
+button{cursor:pointer}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:#c0c8da;border-radius:3px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#003580;color:#fff;padding:9px 10px;text-align:left;font-size:12px;white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid #eee;vertical-align:middle}
+tr:nth-child(even){background:#f9f9fb}
+tr:hover td{background:#e8f0fd}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;color:#fff;white-space:nowrap}
+.fl{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.fv{font-size:13px;color:#333}
+.fg{margin-bottom:13px}
+.flb{display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
+.fi{display:block;width:100%;padding:8px 11px;border:1.5px solid #ccd6e8;border-radius:6px;font-size:13px;outline:none}
+.fi:focus{border-color:#005bb5}
+.btn{padding:8px 18px;border:none;border-radius:6px;font-weight:600;font-size:13px}
+.btn:hover{opacity:.85}
+.bp{background:#003580;color:#fff}
+.bs{background:#e8e8e8;color:#333}
+.bsm{padding:4px 11px;font-size:12px}
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.mb{background:#fff;border-radius:10px;width:100%;max-width:740px;box-shadow:0 20px 60px rgba(0,0,0,.3);margin-top:20px;max-height:90vh;display:flex;flex-direction:column}
+.mh{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#003580;border-radius:10px 10px 0 0;flex-shrink:0}
+.mt{color:#fff;font-weight:700;font-size:14px}
+.mc{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:3px 9px;font-size:15px}
+.mbd{padding:20px;overflow-y:auto;flex:1}
+.sc{background:#fff;border-radius:10px;padding:15px 16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.sv{font-size:28px;font-weight:800;line-height:1}
+.sl{font-size:12px;color:#666;margin-top:4px}
+.nb{padding:9px 15px;background:transparent;border:none;border-bottom:3px solid transparent;color:rgba(255,255,255,.75);font-weight:500;font-size:13px}
+.nb.act{background:rgba(255,255,255,.15);border-bottom-color:#fff;color:#fff;font-weight:700}
+.nb:hover{color:#fff;background:rgba(255,255,255,.08)}
+.at{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border:1px solid #ccc;border-radius:20px;font-size:12px;background:#f9f9f9;margin:3px;cursor:pointer}
+.at.sel{border:2px solid #005bb5;background:#e8f0fd;font-weight:600}
+.ab{padding:9px 13px;border-radius:6px;font-size:13px;margin-bottom:11px}
+.ae{background:#fff0f0;border:1px solid #ffcccc;color:#c0392b}
+.aw{background:#fffbe6;border:1px solid #ffe58f;color:#856404}
+.ai{background:#f0f7ff;border:1px solid #b3d4ff;color:#003580}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.fr{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.na{background:#f0f7ff;border:1px solid #b3d4ff;border-radius:8px;padding:13px;margin-top:13px}
+.toast{position:fixed;right:18px;bottom:18px;z-index:2000;background:#0f7b53;color:#fff;border-radius:8px;padding:11px 14px;box-shadow:0 10px 30px rgba(0,0,0,.22);font-size:13px;font-weight:700;max-width:min(360px,calc(100vw - 36px))}
+.file-drop{border:2px dashed #ccd6e8;border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:#fafbfd}
+.file-drop:hover,.file-drop.drag{border-color:#005bb5;background:#f0f7ff}
+.file-chip{display:inline-flex;align-items:center;gap:6px;background:#e8f0fd;border:1px solid #b3d4ff;border-radius:16px;padding:3px 10px 3px 8px;font-size:12px;margin:3px}
+.file-chip button{background:none;border:none;color:#c0392b;font-size:14px;line-height:1;padding:0;cursor:pointer;font-weight:700}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+const DRIVE="https://drive.google.com/drive/folders/1GS_pPVVEaw1-YmuXYxPrHYATZuUFAaYn";
+const GAS_WEB_APP_URL="https://script.google.com/macros/s/AKfycbyWBshYn8eDf5X8kcMhUlhOgT1GQr51pbBtaiQC0nI8GrA_F1vjhgvyZ7N5ib9ypIYVPA/exec";
+const SK="de_batt_lms_v4";
+const SSK="de_batt_sess_v4";
+const EMPTY_STATE={inL:[],outL:[],notifications:[],inC:1,outC:1};
+
+let USERS=[
+  {u:"DE",d:"Divisional Engineer",r:"DE"},
+  {u:"CC",d:"Chief Clerk",r:"CC"},
+  {u:"MO1",d:"Management Officer 1",r:"MO"},
+  {u:"MO2",d:"Management Officer 2",r:"MO"},
+  {u:"MO3",d:"Management Officer 3",r:"MO"},
+  {u:"MO4",d:"Management Officer 4",r:"MO"},
+  {u:"DO1",d:"Development Officer 1",r:"DO"},
+  {u:"DO2",d:"Development Officer 2",r:"DO"},
+  {u:"STO KADUWELA",d:"STO Kaduwela",r:"STO"},
+  {u:"STO MAHARAGAMA",d:"STO Maharagama",r:"STO"},
+  {u:"STO NUGEGODA",d:"STO Nugegoda",r:"STO"},
+  {u:"STO KOLONNAWA",d:"STO Kolonnawa",r:"STO"},
+  {u:"KADUWELA TO1",d:"Kaduwela TO1",r:"TO"},
+  {u:"KADUWELA TO2",d:"Kaduwela TO2",r:"TO"},
+  {u:"KADUWELA TO3",d:"Kaduwela TO3",r:"TO"},
+  {u:"KOLONNAWA TO1",d:"Kolonnawa TO1",r:"TO"},
+  {u:"KOLONNAWA TO2",d:"Kolonnawa TO2",r:"TO"},
+  {u:"NUGEGODA TO1",d:"Nugegoda TO1",r:"TO"},
+  {u:"NUGEGODA TO2",d:"Nugegoda TO2",r:"TO"},
+  {u:"MAHARAGAMA TO1",d:"Maharagama TO1",r:"TO"},
+  {u:"MAHARAGAMA TO2",d:"Maharagama TO2",r:"TO"},
+];
+let ASSIGNABLE=USERS.filter(u=>u.u!=="DE");
+const FROM_OPTS=["DCS Engineering","Director Building","Director Engineering","Ministry of Provincial Councils","Divisional Secretariat","Local Government","Others"];
+const TO_OPTS=["DE","CC","MO1","MO2","MO3","MO4","DO1","DO2","STO KADUWELA","STO MAHARAGAMA","STO NUGEGODA","STO KOLONNAWA","Others"];
+const OUT_TO=["DCS Engineering","Director Building","Director Engineering","Ministry of Provincial Councils","Divisional Secretariat","Local Government","Others"];
+const SC={pending_de:"#e67e22",de_reviewed:"#2980b9",ongoing:"#8e44ad",done:"#27ae60",attended:"#16a085",pending:"#95a5a6"};
+const SL={pending_de:"Pending DE Review",de_reviewed:"DE Reviewed",ongoing:"Ongoing",done:"Done",attended:"Attended",pending:"Pending"};
+
+function setUsers(users){if(Array.isArray(users)&&users.length){USERS=users;ASSIGNABLE=USERS.filter(u=>u.u!=="DE");}}
+async function api(action,payload={}){
+  if(!GAS_WEB_APP_URL)throw new Error('Set GAS_WEB_APP_URL after deploying Apps Script.');
+  const r=await fetch(GAS_WEB_APP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,...payload})});
+  if(!r.ok)throw new Error('API request failed');
+  const data=await r.json();
+  if(data&&data.users)setUsers(data.users);
+  if(data&&data.ok===false)throw new Error(data.error||'API request failed');
+  return data;
+}
+async function bootstrap(){const data=await api('bootstrap');return data.state||EMPTY_STATE;}
+async function ldS(){return bootstrap();}
+async function svS(s){const data=await api('saveState',{state:s});return data.state||s;}
+async function markNotificationsRead(username){const data=await api('markNotificationsRead',{username});return data.state||EMPTY_STATE;}
+function ldSess(){try{const s=localStorage.getItem(SSK);if(s)return JSON.parse(s);}catch{}return null;}
+function svSess(u){try{u?localStorage.setItem(SSK,JSON.stringify(u)):localStorage.removeItem(SSK);}catch{}}
+function mkRef(t,c){const d=new Date();return`DEO_Batt_${String(d.getFullYear()).slice(2)}_${String(d.getMonth()+1).padStart(2,'0')}_${String(d.getDate()).padStart(2,'0')}_${t}_${String(c).padStart(2,'0')}`;}
+function fd(d){return d?new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'-';}
+function fdt(d){return d?new Date(d).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'-';}
+
+function Bdg({s}){return <span className="badge" style={{background:SC[s]||'#999'}}>{SL[s]||s}</span>;}
+function Fld({l,v}){return <div style={{marginBottom:9}}><div className="fl">{l}</div><div className="fv">{v||'-'}</div></div>;}
+function Mod({title,onClose,children}){
+  return <div className="mo" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+    <div className="mb">
+      <div className="mh"><span className="mt">{title}</span><button className="mc" onClick={onClose}>✕</button></div>
+      <div className="mbd">{children}</div>
+    </div>
+  </div>;
+}
+function drivePreviewUrl(fileId,fileUrl){
+  if(fileId)return `https://drive.google.com/file/d/${fileId}/preview`;
+  const m=String(fileUrl||'').match(/\/d\/([^/]+)/);
+  return m?`https://drive.google.com/file/d/${m[1]}/preview`:fileUrl;
+}
+function FullDocView({src,fn,onClose}){
+  return <div className="mo" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+    <div className="mb" style={{maxWidth:'min(1100px,96vw)',height:'92vh'}}>
+      <div className="mh"><span className="mt">{fn||'Document Preview'}</span><button className="mc" onClick={onClose}>✕</button></div>
+      <iframe src={src} title={fn||'Document Preview'} style={{width:'100%',height:'100%',border:'none',background:'#fff'}}/>
+    </div>
+  </div>;
+}
+
+/* Single file view (for legacy letters) */
+function FView({fd:fdata,fn,ft,fileUrl,fileId}){
+  const [full,setFull]=useState(false);
+  if(fileUrl||fileId){
+    const src=drivePreviewUrl(fileId,fileUrl);
+    return <div style={{marginTop:11,border:'1px solid #ddd',borderRadius:6,overflow:'hidden'}}>
+      <div onClick={()=>setFull(true)} style={{cursor:'zoom-in',height:420,background:'#f8f9fb'}}>
+        <iframe src={src} title={fn||'Document Preview'} style={{width:'100%',height:'100%',border:'none',pointerEvents:'none',background:'#fff'}}/>
+      </div>
+      <div style={{padding:'9px 12px',background:'#f5f5f5',display:'flex',gap:10,alignItems:'center',justifyContent:'space-between',flexWrap:'wrap'}}>
+        <span style={{fontSize:12,color:'#555'}}>📎 {fn||'Attachment'}</span>
+        <button className="btn bp bsm" onClick={()=>setFull(true)}>Full View</button>
+      </div>
+      {full&&<FullDocView src={src} fn={fn} onClose={()=>setFull(false)}/>}
+    </div>
+  }
+  if(!fdata)return null;
+  const src=`data:${ft};base64,${fdata}`;
+  return <div style={{marginTop:11,border:'1px solid #ddd',borderRadius:6,overflow:'hidden'}}>
+    {ft?.startsWith('image/')&&<img src={src} alt={fn} style={{maxWidth:'100%',display:'block'}}/>}
+    {ft==='application/pdf'&&<iframe src={src} style={{width:'100%',height:380,border:'none'}} title={fn}/>}
+    {ft&&!ft.startsWith('image/')&&ft!=='application/pdf'&&<div style={{padding:14,fontSize:13,color:'#666',background:'#fafafa'}}>Preview not available for this file type.</div>}
+    <div style={{padding:'7px 12px',background:'#f5f5f5',display:'flex',gap:10,alignItems:'center'}}>
+      <span style={{fontSize:12,color:'#555'}}>📎 {fn}</span>
+      <a href={src} download={fn} style={{color:'#005bb5',fontSize:12,fontWeight:600,textDecoration:'none'}}>⬇ Download</a>
+    </div>
+  </div>;
+}
+
+/* Multi-file attachments viewer */
+function AttachmentsView({attachments}){
+  const [full,setFull]=useState(null);
+  if(!attachments||attachments.length===0)return null;
+  return <div style={{marginTop:11}}>
+    <div style={{fontWeight:700,color:'#003580',fontSize:12,marginBottom:7}}>📎 Attachments ({attachments.length})</div>
+    <div style={{display:'grid',gap:8}}>
+      {attachments.map((att,i)=>{
+        if(att.fileUrl||att.fileId){
+          const src=drivePreviewUrl(att.fileId,att.fileUrl);
+          return <div key={i} style={{border:'1px solid #ddd',borderRadius:6,overflow:'hidden'}}>
+            <div onClick={()=>setFull({src,fn:att.fn})} style={{cursor:'zoom-in',height:200,background:'#f8f9fb'}}>
+              <iframe src={src} title={att.fn||'Doc'} style={{width:'100%',height:'100%',border:'none',pointerEvents:'none'}}/>
+            </div>
+            <div style={{padding:'7px 12px',background:'#f5f5f5',display:'flex',gap:10,alignItems:'center',justifyContent:'space-between'}}>
+              <span style={{fontSize:12,color:'#555'}}>📎 {att.fn||`File ${i+1}`}</span>
+              <button className="btn bp bsm" onClick={()=>setFull({src,fn:att.fn})}>Full View</button>
+            </div>
+          </div>;
+        }
+        if(!att.fd)return null;
+        const src=`data:${att.ft};base64,${att.fd}`;
+        return <div key={i} style={{border:'1px solid #ddd',borderRadius:6,overflow:'hidden'}}>
+          {att.ft?.startsWith('image/')&&<img src={src} alt={att.fn} style={{maxWidth:'100%',maxHeight:280,display:'block',objectFit:'contain',background:'#f8f9fb'}}/>}
+          {att.ft==='application/pdf'&&<iframe src={src} style={{width:'100%',height:240,border:'none'}} title={att.fn}/>}
+          {att.ft&&!att.ft.startsWith('image/')&&att.ft!=='application/pdf'&&
+            <div style={{padding:12,fontSize:13,color:'#666',background:'#fafafa'}}>📄 {att.fn} — preview not available.</div>}
+          <div style={{padding:'7px 12px',background:'#f5f5f5',display:'flex',gap:10,alignItems:'center'}}>
+            <span style={{fontSize:12,color:'#555'}}>📎 {att.fn}</span>
+            <a href={src} download={att.fn} style={{color:'#005bb5',fontSize:12,fontWeight:600,textDecoration:'none'}}>⬇ Download</a>
+          </div>
+        </div>;
+      })}
+    </div>
+    {full&&<FullDocView src={full.src} fn={full.fn} onClose={()=>setFull(null)}/>}
+  </div>;
+}
+
+/* Multi-file uploader widget */
+function MultiFileUploader({files,onChange}){
+  const inputRef=useRef(null);
+  const [drag,setDrag]=useState(false);
+  const readFile=fl=>new Promise(res=>{
+    const r=new FileReader();
+    r.onload=ev=>res({fd:ev.target.result.split(',')[1],fn:fl.name,ft:fl.type});
+    r.readAsDataURL(fl);
+  });
+  const addFiles=async flist=>{
+    const arr=Array.from(flist);
+    const read=await Promise.all(arr.map(readFile));
+    onChange([...files,...read]);
+  };
+  const remove=i=>onChange(files.filter((_,j)=>j!==i));
+  return <div>
+    <div className={`file-drop${drag?' drag':''}`}
+      onClick={()=>inputRef.current.click()}
+      onDragOver={e=>{e.preventDefault();setDrag(true);}}
+      onDragLeave={()=>setDrag(false)}
+      onDrop={e=>{e.preventDefault();setDrag(false);addFiles(e.dataTransfer.files);}}>
+      <div style={{fontSize:22,marginBottom:5}}>📁</div>
+      <div style={{fontSize:13,color:'#555',fontWeight:600}}>Click or drag &amp; drop files here</div>
+      <div style={{fontSize:11,color:'#999',marginTop:3}}>Images, PDFs, Word documents — multiple files allowed</div>
+      <input ref={inputRef} type="file" multiple accept="image/*,.pdf,.doc,.docx" style={{display:'none'}}
+        onChange={e=>addFiles(e.target.files)}/>
+    </div>
+    {files.length>0&&<div style={{marginTop:8,display:'flex',flexWrap:'wrap',gap:2}}>
+      {files.map((f,i)=><span key={i} className="file-chip">
+        {f.ft?.startsWith('image/')?'🖼':'📄'} {f.fn}
+        <button title="Remove" onClick={e=>{e.stopPropagation();remove(i);}}>×</button>
+      </span>)}
+    </div>}
+  </div>;
+}
+
+function Toast({message,onClose}){
+  useEffect(()=>{if(!message)return;const t=setTimeout(onClose,3200);return()=>clearTimeout(t);},[message]);
+  if(!message)return null;
+  return <div className="toast">{message}</div>;
+}
+
+function LoginPage({onLogin}){
+  const [u,su]=useState('');const [p,sp]=useState('');const [e,se]=useState('');
+  const [busy,setBusy]=useState(false);
+  const go=async()=>{
+    if(busy)return;
+    setBusy(true);se('');
+    try{const r=await api('login',{username:u,password:p});onLogin(r.user);}
+    catch(err){se(err.message||'Invalid username or password.');}
+    finally{setBusy(false);}
+  };
+  return <div style={{minHeight:'100vh',background:'linear-gradient(135deg,#001f5b,#003580,#005bb5)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:16}}>
+    <div style={{background:'#fff',borderRadius:12,boxShadow:'0 20px 60px rgba(0,0,0,.4)',maxWidth:420,width:'100%',overflow:'hidden'}}>
+      <div style={{background:'linear-gradient(135deg,#001f5b,#003580)',padding:'26px 24px 20px',textAlign:'center'}}>
+        <div style={{color:'#fff',fontWeight:800,fontSize:18,letterSpacing:'.5px'}}>DE Office – Battaramulla</div>
+        <div style={{color:'#b3d4ff',fontSize:13,marginTop:4}}>Letter Management System</div>
+        <div style={{color:'rgba(255,255,255,.4)',fontSize:11,marginTop:2}}>Engineering Branch</div>
+      </div>
+      <div style={{padding:'24px 28px'}}>
+        <div className="fg"><label className="flb">Username</label><input className="fi" value={u} onChange={e=>su(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()} placeholder="e.g. DE, CC, MO1…"/></div>
+        <div className="fg"><label className="flb">Password</label><input className="fi" type="password" value={p} onChange={e=>sp(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()}/></div>
+        {e&&<div className="ab ae">{e}</div>}
+        <button className="btn bp" style={{width:'100%',padding:'10px'}} onClick={go} disabled={busy}>{busy?'Signing In...':'Sign In'}</button>
+      </div>
+    </div>
+    <div style={{color:'rgba(255,255,255,.4)',fontSize:11,marginTop:16}}>© 2026 Divisional Engineer's Office, Battaramulla</div>
+  </div>;
+}
+
+function TopNav({user,page,setPage,onLogout,notifications,onMarkNotificationsRead}){
+  const [showN,setShowN]=useState(false);
+  const unread=notifications.filter(n=>!n.read).length;
+  const isAdmin=['DE','CC'].includes(user.r);
+  const tabs=[{id:'dash',l:'🏠 Dashboard'},{id:'in',l:'📥 In Letters'},...(!['STO','TO'].includes(user.r)?[{id:'out',l:'📤 Out Letters'}]:[]),...(isAdmin?[{id:'rep',l:'📊 Reports'}]:[])];
+  return <div style={{background:'linear-gradient(to right,#001f5b,#003580)',boxShadow:'0 2px 10px rgba(0,0,0,.2)',position:'sticky',top:0,zIndex:100}}>
+    <div style={{display:'flex',alignItems:'center',padding:'10px 18px',gap:10,borderBottom:'1px solid rgba(255,255,255,.1)'}}>
+      <div style={{flex:1}}>
+        <div style={{color:'#fff',fontWeight:800,fontSize:15}}>DE Office – Battaramulla &nbsp;|&nbsp; Letter Management System</div>
+        <div style={{color:'rgba(255,255,255,.45)',fontSize:11,marginTop:1}}>Engineering Branch</div>
+      </div>
+      <div style={{textAlign:'right',marginRight:6}}>
+        <div style={{color:'#fff',fontSize:12,fontWeight:600}}>{user.d}</div>
+        <div style={{color:'rgba(255,255,255,.5)',fontSize:11}}>{user.r} · {user.u}</div>
+      </div>
+      <button className="btn" style={{background:'rgba(255,255,255,.12)',border:'1px solid rgba(255,255,255,.2)',color:'#fff',fontSize:12,position:'relative'}} onClick={()=>setShowN(true)}>
+        🔔
+        {unread>0&&<span style={{position:'absolute',top:-7,right:-7,background:'#e74c3c',color:'#fff',borderRadius:20,fontSize:10,fontWeight:800,minWidth:18,padding:'2px 5px'}}>{unread}</span>}
+      </button>
+      <button className="btn" style={{background:'rgba(255,255,255,.12)',border:'1px solid rgba(255,255,255,.2)',color:'#fff',fontSize:12}} onClick={onLogout}>Logout</button>
+    </div>
+    <div style={{display:'flex',padding:'0 18px'}}>
+      {tabs.map(t=><button key={t.id} className={`nb${page===t.id?' act':''}`} onClick={()=>setPage(t.id)}>{t.l}</button>)}
+    </div>
+    {showN&&<Mod title="Notifications" onClose={()=>setShowN(false)}>
+      {notifications.length===0?<div style={{textAlign:'center',color:'#aaa',padding:30}}>No notifications.</div>:
+        <div style={{display:'grid',gap:8}}>
+          {notifications.slice(0,30).map(n=><div key={n.id} style={{border:'1px solid #e5e8f0',borderRadius:6,padding:'10px 12px',background:n.read?'#fff':'#f0f7ff'}}>
+            <div style={{display:'flex',justifyContent:'space-between',gap:10}}>
+              <strong style={{fontSize:13,color:'#003580'}}>{n.title}</strong>
+              <span style={{fontSize:11,color:'#888',whiteSpace:'nowrap'}}>{fdt(n.createdAt)}</span>
+            </div>
+            <div style={{fontSize:13,color:'#444',marginTop:3}}>{n.message}</div>
+          </div>)}
+        </div>}
+      {unread>0&&<div className="fr" style={{justifyContent:'flex-end',marginTop:13}}>
+        <button className="btn bp bsm" onClick={()=>onMarkNotificationsRead()}>Mark All Read</button>
+      </div>}
+    </Mod>}
+  </div>;
+}
+
+function SCard({label,value,color,onClick}){
+  return <div className="sc" onClick={onClick} style={{borderTop:`4px solid ${color}`,cursor:onClick?'pointer':'default'}}
+    onMouseEnter={e=>{if(onClick)e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.transition='transform .15s';}}
+    onMouseLeave={e=>{e.currentTarget.style.transform='';}}>
+    <div className="sv" style={{color}}>{value}</div>
+    <div className="sl">{label}</div>
+    {onClick&&<div style={{fontSize:10,color:'#aaa',marginTop:3}}>Click to view</div>}
+  </div>;
+}
+
+function UpInForm({user,onClose,state,onSave}){
+  const [f,sf]=useState({ref:'',dr:'',from:'',fromO:'',to:'',toO:'',subj:'',desc:'',asgn:[]});
+  const [files,setFiles]=useState([]);
+  const set=(k,v)=>sf(x=>({...x,[k]:v}));
+  const tog=u=>sf(x=>({...x,asgn:x.asgn.includes(u)?x.asgn.filter(a=>a!==u):[...x.asgn,u]}));
+  const sub=()=>{
+    if(!f.dr||!f.from||!f.subj){alert('Fill required fields.');return;}
+    const ref=f.ref.trim()||mkRef('In',state.inC);
+    const frm=f.from==='Others'?f.fromO:f.from;
+    const to=f.to==='Others'?f.toO:f.to;
+    const asgn=f.asgn.map(u=>({u,d:USERS.find(x=>x.u===u).d,s:'pending',seen:null}));
+    // Keep first file in legacy fd/fn/ft fields for backward compat; rest in attachments array
+    const first=files[0]||null;
+    const attachments=files.length>0?files:[];
+    onSave({
+      id:crypto.randomUUID(),ref,dr:f.dr,du:new Date().toISOString(),by:user.u,
+      from:frm,to:to||'DE',subj:f.subj,desc:f.desc,
+      fd:first?.fd,fn:first?.fn,ft:first?.ft,
+      attachments,
+      asgn,status:user.r==='DE'?'de_reviewed':'pending_de',note:''
+    });
+    onClose();
+  };
+  return <div>
+    <div className="g2">
+      <div className="fg"><label className="flb">Reference No</label><input className="fi" value={f.ref} onChange={e=>set('ref',e.target.value)} placeholder={mkRef('In',state.inC)}/></div>
+      <div className="fg"><label className="flb">Date Received *</label><input type="date" className="fi" value={f.dr} onChange={e=>set('dr',e.target.value)}/></div>
+      <div className="fg"><label className="flb">To</label>
+        <select className="fi" value={f.to} onChange={e=>set('to',e.target.value)}><option value="">-- Select --</option>{TO_OPTS.map(o=><option key={o}>{o}</option>)}</select>
+        {f.to==='Others'&&<input className="fi" style={{marginTop:5}} placeholder="Specify…" value={f.toO} onChange={e=>set('toO',e.target.value)}/>}
+      </div>
+      <div className="fg" style={{gridColumn:'span 2'}}><label className="flb">From *</label>
+        <select className="fi" value={f.from} onChange={e=>set('from',e.target.value)}><option value="">-- Select --</option>{FROM_OPTS.map(o=><option key={o}>{o}</option>)}</select>
+        {f.from==='Others'&&<input className="fi" style={{marginTop:5}} placeholder="Specify…" value={f.fromO} onChange={e=>set('fromO',e.target.value)}/>}
+      </div>
+      <div className="fg" style={{gridColumn:'span 2'}}><label className="flb">Subject *</label><input className="fi" value={f.subj} onChange={e=>set('subj',e.target.value)}/></div>
+    </div>
+    <div className="fg"><label className="flb">Description</label><textarea className="fi" style={{height:65,resize:'vertical'}} value={f.desc} onChange={e=>set('desc',e.target.value)}/></div>
+    <div className="fg">
+      <label className="flb">Attachments (multiple allowed)</label>
+      <MultiFileUploader files={files} onChange={setFiles}/>
+    </div>
+    {user.r==='DE'&&<div className="fg"><label className="flb">Assign To</label>
+      <div style={{display:'flex',flexWrap:'wrap',marginTop:5}}>
+        {ASSIGNABLE.map(a=><label key={a.u} className={`at${f.asgn.includes(a.u)?' sel':''}`}><input type="checkbox" checked={f.asgn.includes(a.u)} onChange={()=>tog(a.u)} style={{margin:0}}/> {a.d}</label>)}
+      </div>
+    </div>}
+    <div className="fr" style={{justifyContent:'flex-end',marginTop:6}}>
+      <button className="btn bs" onClick={onClose}>Cancel</button>
+      <button className="btn bp" onClick={sub}>Upload Letter</button>
+    </div>
+  </div>;
+}
+
+function UpOutForm({user,onClose,state,onSave}){
+  const [f,sf]=useState({ref:'',ds:'',subj:'',to:'',toO:'',desc:''});
+  const [files,setFiles]=useState([]);
+  const set=(k,v)=>sf(x=>({...x,[k]:v}));
+  const sub=()=>{
+    if(!f.ds||!f.subj||!f.to){alert('Fill required fields.');return;}
+    const ref=f.ref.trim()||mkRef('Out',state.outC);
+    const first=files[0]||null;
+    const attachments=files.length>0?files:[];
+    onSave({
+      id:crypto.randomUUID(),ref,ds:f.ds,du:new Date().toISOString(),by:user.u,
+      from:'DE Battaramulla',to:f.to==='Others'?f.toO:f.to,
+      subj:f.subj,desc:f.desc,
+      fd:first?.fd,fn:first?.fn,ft:first?.ft,
+      attachments
+    });
+    onClose();
+  };
+  return <div>
+    <div className="g2">
+      <div className="fg"><label className="flb">Reference No</label><input className="fi" value={f.ref} onChange={e=>set('ref',e.target.value)} placeholder={mkRef('Out',state.outC)}/></div>
+      <div className="fg"><label className="flb">Date Sent *</label><input type="date" className="fi" value={f.ds} onChange={e=>set('ds',e.target.value)}/></div>
+      <div className="fg"><label className="flb">From</label><input className="fi" value="DE Battaramulla" readOnly style={{background:'#f5f5f5',color:'#888'}}/></div>
+      <div className="fg" style={{gridColumn:'span 2'}}><label className="flb">To *</label>
+        <select className="fi" value={f.to} onChange={e=>set('to',e.target.value)}><option value="">-- Select --</option>{OUT_TO.map(o=><option key={o}>{o}</option>)}</select>
+        {f.to==='Others'&&<input className="fi" style={{marginTop:5}} placeholder="Specify…" value={f.toO} onChange={e=>set('toO',e.target.value)}/>}
+      </div>
+      <div className="fg" style={{gridColumn:'span 2'}}><label className="flb">Subject *</label><input className="fi" value={f.subj} onChange={e=>set('subj',e.target.value)}/></div>
+    </div>
+    <div className="fg"><label className="flb">Description</label><textarea className="fi" style={{height:65,resize:'vertical'}} value={f.desc} onChange={e=>set('desc',e.target.value)}/></div>
+    <div className="fg">
+      <label className="flb">Attachments (multiple allowed)</label>
+      <MultiFileUploader files={files} onChange={setFiles}/>
+    </div>
+    <div className="fr" style={{justifyContent:'flex-end'}}>
+      <button className="btn bs" onClick={onClose}>Cancel</button>
+      <button className="btn bp" onClick={sub}>Upload Out Letter</button>
+    </div>
+  </div>;
+}
+
+function InModal({letter,user,onClose,onUpdate}){
+  const [note,setNote]=useState(letter.note||'');
+  const [editN,setEditN]=useState(false);
+  const [showA,setShowA]=useState(false);
+  const [newA,setNewA]=useState(letter.asgn.map(a=>a.u));
+  const [addFiles,setAddFiles]=useState([]);
+  const isDE=user.r==='DE';
+
+  useEffect(()=>{
+    const my=letter.asgn.find(a=>a.u===user.u);
+    if(my&&!my.seen){
+      const upd=letter.asgn.map(a=>a.u===user.u?{...a,seen:new Date().toISOString()}:a);
+      onUpdate(letter.id,{asgn:upd});
+    }
+  },[]);
+
+  const updStatus=s=>{
+    const upd=letter.asgn.map(a=>a.u===user.u?{...a,s}:a);
+    const allD=upd.every(a=>a.s==='done');
+    const anyO=upd.some(a=>a.s==='ongoing');
+    let ns=letter.status;
+    if(!['pending_de'].includes(letter.status)){ns=allD?'done':anyO?'ongoing':'de_reviewed';}
+    onUpdate(letter.id,{asgn:upd,status:ns});
+  };
+  const saveNote=()=>{onUpdate(letter.id,{note});setEditN(false);};
+  const approve=()=>onUpdate(letter.id,{status:'de_reviewed',note,deAt:new Date().toISOString()});
+  const saveA=()=>{
+    const asgn=newA.map(u=>({u,d:USERS.find(x=>x.u===u).d,s:letter.asgn.find(a=>a.u===u)?.s||'pending',seen:letter.asgn.find(a=>a.u===u)?.seen||null}));
+    onUpdate(letter.id,{asgn});setShowA(false);
+  };
+  const saveMoreFiles=()=>{
+    if(addFiles.length===0)return;
+    const existing=letter.attachments||[];
+    onUpdate(letter.id,{attachments:[...existing,...addFiles]});
+    setAddFiles([]);
+  };
+  const my=letter.asgn.find(a=>a.u===user.u);
+  const canEdit=my&&letter.status!=='pending_de';
+  // Attachments: prefer the new array; fall back to legacy single file
+  const attachments=letter.attachments&&letter.attachments.length>0
+    ?letter.attachments
+    :(letter.fd?[{fd:letter.fd,fn:letter.fn,ft:letter.ft}]:[]);
+
+  return <Mod title={`📄 ${letter.ref}`} onClose={onClose}>
+    <div className="g2">
+      <Fld l="Reference No" v={letter.ref}/><Fld l="Date Received" v={fd(letter.dr)}/>
+      <Fld l="From" v={letter.from}/><Fld l="To" v={letter.to}/>
+      <Fld l="Uploaded By" v={letter.by}/><Fld l="Date Uploaded" v={fdt(letter.du)}/>
+      <Fld l="Status" v={<Bdg s={letter.status}/>}/>{letter.deAt&&<Fld l="DE Reviewed" v={fdt(letter.deAt)}/>}
+    </div>
+    <Fld l="Subject" v={letter.subj}/>
+    {letter.desc&&<Fld l="Description" v={letter.desc}/>}
+    <AttachmentsView attachments={attachments}/>
+
+    {isDE&&<div style={{marginTop:13}}>
+      <div style={{fontWeight:700,color:'#003580',fontSize:12,marginBottom:6}}>➕ Add More Attachments</div>
+      <MultiFileUploader files={addFiles} onChange={setAddFiles}/>
+      {addFiles.length>0&&<button className="btn bp bsm" style={{marginTop:7}} onClick={saveMoreFiles}>Save Attachments</button>}
+    </div>}
+
+    {(isDE||letter.note)&&<div className="na">
+      <div style={{fontWeight:700,color:'#003580',marginBottom:7,fontSize:13}}>📝 DE Note / Instructions</div>
+      {isDE&&editN
+        ?<><textarea className="fi" style={{height:75}} value={note} onChange={e=>setNote(e.target.value)} placeholder="Instructions…"/>
+          <div className="fr" style={{marginTop:7}}>
+            <button className="btn bp bsm" onClick={saveNote}>Save</button>
+            <button className="btn bs bsm" onClick={()=>{setNote(letter.note||'');setEditN(false);}}>Cancel</button>
+          </div></>
+        :<><div style={{fontSize:13,color:'#333',whiteSpace:'pre-wrap',minHeight:22}}>{letter.note||<span style={{color:'#bbb'}}>No note.</span>}</div>
+          {isDE&&<button className="btn bp bsm" style={{marginTop:7}} onClick={()=>setEditN(true)}>✏️ Edit Note</button>}</>}
+    </div>}
+
+    {letter.asgn.length>0&&<div style={{marginTop:14}}>
+      <div style={{fontWeight:700,color:'#003580',marginBottom:7,fontSize:13}}>👥 Assigned Members</div>
+      {letter.asgn.map(a=><div key={a.u} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 11px',background:'#f9f9f9',border:'1px solid #eee',borderRadius:6,marginBottom:5}}>
+        <div>
+          <span style={{fontSize:13,fontWeight:600}}>{a.d}</span>
+          {isDE&&<span style={{marginLeft:9,fontSize:11,color:a.seen?'#27ae60':'#e74c3c',fontWeight:600}}>
+            {a.seen?`👁 Seen ${fdt(a.seen)}`:'👁 Not Seen'}
+          </span>}
+        </div>
+        <div className="fr">
+          <Bdg s={a.s}/>
+          {a.u===user.u&&canEdit&&<select value={a.s} onChange={e=>updStatus(e.target.value)} style={{fontSize:12,padding:'3px 7px',borderRadius:4,border:'1px solid #ccc'}}>
+            <option value="pending">Pending</option>
+            <option value="attended">Attended</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="done">Done</option>
+          </select>}
+        </div>
+      </div>)}
+    </div>}
+
+    {isDE&&<div style={{marginTop:14,display:'flex',gap:8,flexWrap:'wrap'}}>
+      <button className="btn bp bsm" onClick={()=>setShowA(true)}>👤 Manage Assignees</button>
+      {letter.status==='pending_de'&&<button className="btn bp" style={{background:'#27ae60'}} onClick={approve}>✅ Approve & DE Reviewed</button>}
+    </div>}
+    {isDE&&letter.status==='pending_de'&&<div className="ab aw" style={{marginTop:12}}><strong>⚡ Action Required:</strong> Review, add note, then Approve.</div>}
+
+    {showA&&<Mod title="Manage Assignees" onClose={()=>setShowA(false)}>
+      <div style={{display:'flex',flexWrap:'wrap'}}>
+        {ASSIGNABLE.map(a=><label key={a.u} className={`at${newA.includes(a.u)?' sel':''}`}>
+          <input type="checkbox" checked={newA.includes(a.u)} onChange={()=>setNewA(p=>p.includes(a.u)?p.filter(x=>x!==a.u):[...p,a.u])} style={{margin:0}}/> {a.d}
+        </label>)}
+      </div>
+      <div className="fr" style={{justifyContent:'flex-end',marginTop:13}}>
+        <button className="btn bs" onClick={()=>setShowA(false)}>Cancel</button>
+        <button className="btn bp" onClick={saveA}>Save</button>
+      </div>
+    </Mod>}
+  </Mod>;
+}
+
+function OutModal({letter,onClose}){
+  const attachments=letter.attachments&&letter.attachments.length>0
+    ?letter.attachments
+    :(letter.fd?[{fd:letter.fd,fn:letter.fn,ft:letter.ft}]:[]);
+  return <Mod title={`📤 ${letter.ref}`} onClose={onClose}>
+    <div className="g2">
+      <Fld l="Reference No" v={letter.ref}/><Fld l="Date Sent" v={fd(letter.ds)}/>
+      <Fld l="From" v={letter.from}/><Fld l="To" v={letter.to}/>
+      <Fld l="Uploaded By" v={letter.by}/><Fld l="Date Uploaded" v={fdt(letter.du)}/>
+    </div>
+    <Fld l="Subject" v={letter.subj}/>
+    {letter.desc&&<Fld l="Description" v={letter.desc}/>}
+    <AttachmentsView attachments={attachments}/>
+  </Mod>;
+}
+
+function Dashboard({user,state,setPage,setFS}){
+  const {inL}=state;
+  const isDE=user.r==='DE',isCC=user.r==='CC',isAdmin=isDE||isCC;
+  const tot=inL.length,pde=inL.filter(l=>l.status==='pending_de').length,don=inL.filter(l=>l.status==='done').length,ong=inL.filter(l=>l.status==='ongoing').length;
+  const my=inL.filter(l=>l.asgn.some(a=>a.u===user.u));
+  const myP=my.filter(l=>l.asgn.find(a=>a.u===user.u)?.s==='pending');
+  const myO=my.filter(l=>l.asgn.find(a=>a.u===user.u)?.s==='ongoing');
+  const myD=my.filter(l=>l.asgn.find(a=>a.u===user.u)?.s==='done');
+  const unseen=isDE?inL.reduce((s,l)=>s+l.asgn.filter(a=>!a.seen).length,0):0;
+  const go=s=>{setFS(s);setPage('in');};
+  return <div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:13,marginBottom:22}}>
+      {isAdmin&&<>
+        <SCard label="Total In Letters" value={tot} color="#003580" onClick={()=>go('')}/>
+        <SCard label="Pending DE Review" value={pde} color="#e67e22" onClick={()=>go('pending_de')}/>
+        <SCard label="DE Approved" value={tot-pde} color="#2980b9" onClick={()=>go('de_reviewed')}/>
+        <SCard label="Ongoing" value={ong} color="#8e44ad" onClick={()=>go('ongoing')}/>
+        <SCard label="Completed" value={don} color="#27ae60" onClick={()=>go('done')}/>
+        <SCard label="Out Letters" value={state.outL.length} color="#16a085" onClick={()=>setPage('out')}/>
+      </>}
+      {!isAdmin&&<>
+        <SCard label="Assigned to Me" value={my.length} color="#003580" onClick={()=>go('')}/>
+        <SCard label="My Pending" value={myP.length} color="#c0392b"/>
+        <SCard label="My Ongoing" value={myO.length} color="#d35400"/>
+        <SCard label="My Done" value={myD.length} color="#27ae60"/>
+      </>}
+    </div>
+    {isDE&&unseen>0&&<div className="ab aw">👁 <strong>{unseen}</strong> assigned task{unseen>1?'s':''} not yet seen by assignees.</div>}
+    {isDE&&pde>0&&<div className="ab aw">⚡ <strong>{pde}</strong> letter{pde>1?'s':''} pending your review.</div>}
+    <div style={{fontSize:13,color:'#666',fontStyle:'italic',marginTop:10}}>Welcome, <strong>{user.d}</strong>. Click any card to filter.</div>
+  </div>;
+}
+
+function InPage({user,state,onAdd,onUpd,fs,setFS}){
+  const [sel,setSel]=useState(null);
+  const [showUp,setShowUp]=useState(false);
+  const [srch,setSrch]=useState('');
+  const [sf,setSf]=useState(fs||'');
+  const [pf,setPf]=useState('');
+  const [df,setDf]=useState('');
+  const [dt,setDt]=useState('');
+  useEffect(()=>{if(fs!==undefined){setSf(fs);setFS(undefined);}},[fs]);
+  const isDE=user.r==='DE',isCC=user.r==='CC',isAdmin=isDE||isCC,isST=['STO','TO'].includes(user.r);
+  let ls=state.inL;
+  if(isST) ls=ls.filter(l=>l.asgn.some(a=>a.u===user.u)&&l.status!=='pending_de');
+  else if(!isAdmin) ls=ls.filter(l=>l.asgn.some(a=>a.u===user.u));
+  if(srch) ls=ls.filter(l=>l.ref.toLowerCase().includes(srch.toLowerCase())||l.subj.toLowerCase().includes(srch.toLowerCase())||l.from.toLowerCase().includes(srch.toLowerCase()));
+  if(sf) ls=ls.filter(l=>l.status===sf);
+  if(isAdmin&&pf) ls=ls.filter(l=>l.asgn.some(a=>a.u===pf));
+  if(df) ls=ls.filter(l=>l.dr>=df);
+  if(dt) ls=ls.filter(l=>l.dr<=dt);
+  return <div>
+    <div className="fr" style={{justifyContent:'space-between',marginBottom:13,flexWrap:'wrap',gap:7}}>
+      <div className="fr">
+        <input className="fi" style={{width:170}} placeholder="🔍 Search…" value={srch} onChange={e=>setSrch(e.target.value)}/>
+        <select className="fi" style={{width:155}} value={sf} onChange={e=>setSf(e.target.value)}>
+          <option value="">All Status</option>
+          <option value="pending_de">Pending DE Review</option>
+          <option value="de_reviewed">DE Reviewed</option>
+          <option value="ongoing">Ongoing</option>
+          <option value="done">Done</option>
+        </select>
+        {isAdmin&&<select className="fi" style={{width:170}} value={pf} onChange={e=>setPf(e.target.value)}>
+          <option value="">All Assignees</option>
+          {ASSIGNABLE.map(a=><option key={a.u} value={a.u}>{a.d}</option>)}
+        </select>}
+        <input type="date" className="fi" style={{width:132}} value={df} onChange={e=>setDf(e.target.value)}/>
+        <input type="date" className="fi" style={{width:132}} value={dt} onChange={e=>setDt(e.target.value)}/>
+      </div>
+      {isAdmin&&<button className="btn bp" onClick={()=>setShowUp(true)}>+ Upload In Letter</button>}
+    </div>
+    {ls.length===0?<div style={{textAlign:'center',color:'#aaa',padding:50}}>No letters found.</div>:
+    <div className="tw"><table>
+      <thead><tr><th>Ref No</th><th>Date</th><th>From</th><th>To</th><th>Subject</th><th>Files</th><th>Assignees</th>{isDE&&<th>Seen?</th>}<th>Status</th><th></th></tr></thead>
+      <tbody>{ls.map(l=>{
+        const allS=l.asgn.length>0&&l.asgn.every(a=>a.seen);
+        const noneS=l.asgn.length>0&&l.asgn.every(a=>!a.seen);
+        const fileCount=(l.attachments||[]).length||(l.fd?1:0);
+        return <tr key={l.id} onClick={()=>setSel(l)} style={{cursor:'pointer'}}>
+          <td><strong style={{color:'#003580'}}>{l.ref}</strong></td>
+          <td>{fd(l.dr)}</td><td>{l.from}</td><td>{l.to}</td><td>{l.subj}</td>
+          <td style={{textAlign:'center'}}>{fileCount>0?<span style={{background:'#e8f0fd',color:'#003580',borderRadius:10,padding:'2px 7px',fontSize:11,fontWeight:700}}>📎 {fileCount}</span>:'-'}</td>
+          <td style={{fontSize:12}}>{l.asgn.map(a=>a.d).join(', ')||'-'}</td>
+          {isDE&&<td>{l.asgn.length===0?'-':allS?<span style={{color:'#27ae60',fontSize:12,fontWeight:600}}>✅ All</span>:noneS?<span style={{color:'#e74c3c',fontSize:12,fontWeight:600}}>❌ None</span>:<span style={{color:'#e67e22',fontSize:12,fontWeight:600}}>⚠️ Partial</span>}</td>}
+          <td><Bdg s={l.status}/></td>
+          <td><button className="btn bp bsm" onClick={e=>{e.stopPropagation();setSel(l);}}>View</button></td>
+        </tr>;
+      })}</tbody>
+    </table></div>}
+    {sel&&<InModal letter={state.inL.find(l=>l.id===sel.id)||sel} user={user} onClose={()=>setSel(null)} onUpdate={(id,p)=>{onUpd(id,p);}}/>}
+    {showUp&&<Mod title="Upload Incoming Letter" onClose={()=>setShowUp(false)}><UpInForm user={user} onClose={()=>setShowUp(false)} state={state} onSave={l=>{onAdd(l);setShowUp(false);}}/></Mod>}
+  </div>;
+}
+
+function OutPage({user,state,onAdd}){
+  const [sel,setSel]=useState(null);
+  const [showUp,setShowUp]=useState(false);
+  const [srch,setSrch]=useState('');
+  const [df,setDf]=useState('');const [dt,setDt]=useState('');
+  const isAdmin=['DE','CC'].includes(user.r);
+  let ls=state.outL;
+  if(!isAdmin) ls=ls.filter(l=>l.by===user.u);
+  if(srch) ls=ls.filter(l=>l.ref.toLowerCase().includes(srch.toLowerCase())||l.subj.toLowerCase().includes(srch.toLowerCase()));
+  if(df) ls=ls.filter(l=>l.ds>=df);if(dt) ls=ls.filter(l=>l.ds<=dt);
+  const canUp=['DE','CC','MO','DO'].includes(user.r);
+  return <div>
+    <div className="fr" style={{justifyContent:'space-between',marginBottom:13}}>
+      <div className="fr">
+        <input className="fi" style={{width:200}} placeholder="🔍 Search…" value={srch} onChange={e=>setSrch(e.target.value)}/>
+        <input type="date" className="fi" style={{width:132}} value={df} onChange={e=>setDf(e.target.value)}/>
+        <input type="date" className="fi" style={{width:132}} value={dt} onChange={e=>setDt(e.target.value)}/>
+      </div>
+      {canUp&&<button className="btn bp" onClick={()=>setShowUp(true)}>+ Upload Out Letter</button>}
+    </div>
+    {ls.length===0?<div style={{textAlign:'center',color:'#aaa',padding:50}}>No outgoing letters.</div>:
+    <div className="tw"><table>
+      <thead><tr><th>Ref No</th><th>Date Sent</th><th>From</th><th>To</th><th>Subject</th><th>Files</th><th>Uploaded By</th><th></th></tr></thead>
+      <tbody>{ls.map(l=>{
+        const fileCount=(l.attachments||[]).length||(l.fd?1:0);
+        return <tr key={l.id} onClick={()=>setSel(l)} style={{cursor:'pointer'}}>
+          <td><strong style={{color:'#003580'}}>{l.ref}</strong></td>
+          <td>{fd(l.ds)}</td><td>{l.from}</td><td>{l.to}</td><td>{l.subj}</td>
+          <td style={{textAlign:'center'}}>{fileCount>0?<span style={{background:'#e8f0fd',color:'#003580',borderRadius:10,padding:'2px 7px',fontSize:11,fontWeight:700}}>📎 {fileCount}</span>:'-'}</td>
+          <td>{l.by}</td>
+          <td><button className="btn bp bsm" onClick={e=>{e.stopPropagation();setSel(l);}}>View</button></td>
+        </tr>;
+      })}</tbody>
+    </table></div>}
+    {sel&&<OutModal letter={sel} onClose={()=>setSel(null)}/>}
+    {showUp&&<Mod title="Upload Outgoing Letter" onClose={()=>setShowUp(false)}><UpOutForm user={user} onClose={()=>setShowUp(false)} state={state} onSave={l=>{onAdd(l);setShowUp(false);}}/></Mod>}
+  </div>;
+}
+
+function RepPage({state}){
+  const [pf,setPf]=useState('');const [sf,setSf]=useState('');const [df,setDf]=useState('');const [dt,setDt]=useState('');
+  const {inL,outL}=state;
+  let ls=inL;
+  if(pf) ls=ls.filter(l=>l.asgn.some(a=>a.u===pf));
+  if(sf) ls=ls.filter(l=>l.status===sf);
+  if(df) ls=ls.filter(l=>l.dr>=df);if(dt) ls=ls.filter(l=>l.dr<=dt);
+  return <div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))',gap:11,marginBottom:20}}>
+      <SCard label="Total In" value={inL.length} color="#003580"/>
+      <SCard label="Pending DE" value={inL.filter(l=>l.status==='pending_de').length} color="#e67e22"/>
+      <SCard label="Ongoing" value={inL.filter(l=>l.status==='ongoing').length} color="#8e44ad"/>
+      <SCard label="Done" value={inL.filter(l=>l.status==='done').length} color="#27ae60"/>
+      <SCard label="Out Letters" value={outL.length} color="#16a085"/>
+    </div>
+    <div className="fr" style={{marginBottom:13,flexWrap:'wrap'}}>
+      <select className="fi" style={{width:190}} value={pf} onChange={e=>setPf(e.target.value)}><option value="">All Assignees</option>{ASSIGNABLE.map(a=><option key={a.u} value={a.u}>{a.d}</option>)}</select>
+      <select className="fi" style={{width:155}} value={sf} onChange={e=>setSf(e.target.value)}><option value="">All Status</option><option value="pending_de">Pending DE</option><option value="de_reviewed">DE Reviewed</option><option value="ongoing">Ongoing</option><option value="done">Done</option></select>
+      <input type="date" className="fi" style={{width:132}} value={df} onChange={e=>setDf(e.target.value)}/>
+      <input type="date" className="fi" style={{width:132}} value={dt} onChange={e=>setDt(e.target.value)}/>
+      <button className="btn bp bsm" onClick={()=>window.print()}>🖨 Print</button>
+      <a href={DRIVE} target="_blank" rel="noopener noreferrer" style={{padding:'5px 13px',background:'#34a853',color:'#fff',borderRadius:6,fontSize:12,fontWeight:600,textDecoration:'none'}}>📁 Drive</a>
+    </div>
+    <div style={{fontSize:13,fontWeight:700,color:'#003580',marginBottom:7}}>{ls.length} letter{ls.length!==1?'s':''}</div>
+    <div className="tw"><table>
+      <thead><tr><th>Ref No</th><th>Date</th><th>From</th><th>Subject</th><th>Files</th><th>Assignees & Seen</th><th>Status</th><th>DE Note</th></tr></thead>
+      <tbody>{ls.map(l=>{
+        const fileCount=(l.attachments||[]).length||(l.fd?1:0);
+        return <tr key={l.id}>
+          <td><strong>{l.ref}</strong></td><td>{fd(l.dr)}</td><td>{l.from}</td><td>{l.subj}</td>
+          <td style={{textAlign:'center'}}>{fileCount>0?`📎 ${fileCount}`:'-'}</td>
+          <td style={{fontSize:11}}>{l.asgn.map(a=><div key={a.u} style={{marginBottom:2}}>{a.d}: <Bdg s={a.s}/> <span style={{color:a.seen?'#27ae60':'#e74c3c',fontWeight:600,fontSize:11}}>{a.seen?'👁 Seen':'👁 Unseen'}</span></div>)}</td>
+          <td><Bdg s={l.status}/></td>
+          <td style={{fontSize:12,color:'#555'}}>{l.note||'-'}</td>
+        </tr>;
+      })}</tbody>
+    </table></div>
+  </div>;
+}
+
+function App(){
+  const [user,setUser]=useState(()=>ldSess());
+  const [page,setPage]=useState('dash');
+  const [state,setState]=useState(EMPTY_STATE);
+  const [loading,setLoading]=useState(true);
+  const [err,setErr]=useState('');
+  const [toast,setToast]=useState('');
+  const [fs,setFS]=useState(undefined);
+  useEffect(()=>{
+    let alive=true;
+    ldS()
+      .then(s=>{if(alive){setState({...EMPTY_STATE,...s});setErr('');}})
+      .catch(error=>{if(alive)setErr(error.message||'Could not load shared data from Google Sheets.');})
+      .finally(()=>{if(alive)setLoading(false);});
+    return()=>{alive=false;};
+  },[]);
+  const sv=async(n,message='Saved successfully.')=>{
+    setState(n);
+    try{const saved=await svS(n);setState(saved);setErr('');setToast(message);}
+    catch{setErr('Could not save to Google Sheets/Drive. Check the Apps Script deployment.');}
+  };
+  const addIn=l=>sv({...state,inL:[...state.inL,l],inC:state.inC+1},'Incoming letter uploaded successfully.');
+  const updIn=(id,p)=>sv({...state,inL:state.inL.map(l=>l.id===id?{...l,...p}:l)},'Letter updated successfully.');
+  const addOut=l=>sv({...state,outL:[...state.outL,l],outC:state.outC+1},'Outgoing letter uploaded successfully.');
+  const myNotifications=(state.notifications||[]).filter(n=>user&&n.username===user.u);
+  const markMyNotifications=async()=>{
+    if(!user)return;
+    try{const saved=await markNotificationsRead(user.u);setState({...EMPTY_STATE,...saved});setErr('');setToast('Notifications marked as read.');}
+    catch{setErr('Could not update notifications. Check the Apps Script deployment.');}
+  };
+  const login=u=>{setUser(u);svSess(u);setPage('dash');setToast('Signed in successfully.');};
+  const logout=()=>{setUser(null);svSess(null);setPage('dash');};
+  if(!user)return <LoginPage onLogin={login}/>;
+  if(loading)return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#f0f2f7',color:'#003580',fontWeight:800}}>Loading shared data...</div>;
+  return <div style={{minHeight:'100vh',background:'#f0f2f7'}}>
+    <Toast message={toast} onClose={()=>setToast('')}/>
+    <TopNav user={user} page={page} setPage={p=>{setPage(p);setFS(undefined);}} onLogout={logout} notifications={myNotifications} onMarkNotificationsRead={markMyNotifications}/>
+    <div style={{maxWidth:1280,margin:'0 auto',padding:'18px 14px'}}>
+      {err&&<div className="ab ae">{err}</div>}
+      <div style={{background:'#fff',borderRadius:10,boxShadow:'0 2px 12px rgba(0,0,0,.08)',padding:'20px 22px',minHeight:400}}>
+        {page==='dash'&&<><h2 style={{margin:'0 0 16px',color:'#003580',fontSize:16,fontWeight:800}}>🏠 Dashboard</h2><Dashboard user={user} state={state} setPage={setPage} setFS={setFS}/></>}
+        {page==='in'&&<><h2 style={{margin:'0 0 14px',color:'#003580',fontSize:16,fontWeight:800}}>📥 Incoming Letters</h2><InPage user={user} state={state} onAdd={addIn} onUpd={updIn} fs={fs} setFS={setFS}/></>}
+        {page==='out'&&!['STO','TO'].includes(user.r)&&<><h2 style={{margin:'0 0 14px',color:'#003580',fontSize:16,fontWeight:800}}>📤 Outgoing Letters</h2><OutPage user={user} state={state} onAdd={addOut}/></>}
+        {page==='rep'&&['DE','CC'].includes(user.r)&&<><h2 style={{margin:'0 0 14px',color:'#003580',fontSize:16,fontWeight:800}}>📊 Reports</h2><RepPage state={state}/></>}
+      </div>
+    </div>
+  </div>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
