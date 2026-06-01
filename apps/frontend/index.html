@@ -32,6 +32,8 @@ tr:hover td{background:#e8f0fd}
 .bp{background:#003580;color:#fff}
 .bs{background:#e8e8e8;color:#333}
 .bsm{padding:4px 11px;font-size:12px}
+.bdanger{background:#c0392b;color:#fff}
+.bgreen{background:#27ae60;color:#fff}
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
 .mb{background:#fff;border-radius:10px;width:100%;max-width:740px;box-shadow:0 20px 60px rgba(0,0,0,.3);margin-top:20px;max-height:90vh;display:flex;flex-direction:column}
 .mh{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#003580;border-radius:10px 10px 0 0;flex-shrink:0}
@@ -50,86 +52,128 @@ tr:hover td{background:#e8f0fd}
 .ae{background:#fff0f0;border:1px solid #ffcccc;color:#c0392b}
 .aw{background:#fffbe6;border:1px solid #ffe58f;color:#856404}
 .ai{background:#f0f7ff;border:1px solid #b3d4ff;color:#003580}
+.ag{background:#f0fff4;border:1px solid #b3f5d0;color:#0a6640}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
 .fr{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .na{background:#f0f7ff;border:1px solid #b3d4ff;border-radius:8px;padding:13px;margin-top:13px}
 .toast{position:fixed;right:18px;bottom:18px;z-index:2000;background:#0f7b53;color:#fff;border-radius:8px;padding:11px 14px;box-shadow:0 10px 30px rgba(0,0,0,.22);font-size:13px;font-weight:700;max-width:min(360px,calc(100vw - 36px))}
+.toast.err{background:#c0392b}
 .file-drop{border:2px dashed #ccd6e8;border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:#fafbfd}
 .file-drop:hover,.file-drop.drag{border-color:#005bb5;background:#f0f7ff}
 .file-chip{display:inline-flex;align-items:center;gap:6px;background:#e8f0fd;border:1px solid #b3d4ff;border-radius:16px;padding:3px 10px 3px 8px;font-size:12px;margin:3px}
 .file-chip button{background:none;border:none;color:#c0392b;font-size:14px;line-height:1;padding:0;cursor:pointer;font-weight:700}
+.user-card{background:#fff;border:1px solid #dde3f0;border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10;margin-bottom:8px}
+.user-card:hover{background:#f5f8ff;border-color:#b3d4ff}
+.role-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;background:#e8f0fd;color:#003580}
+.save-indicator{position:fixed;top:60px;right:18px;z-index:1500;background:#003580;color:#fff;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(0,0,0,.2)}
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const {useState,useEffect,useRef}=React;
-const DRIVE="https://drive.google.com/drive/folders/1GS_pPVVEaw1-YmuXYxPrHYATZuUFAaYn";
-const GAS_WEB_APP_URL="https://script.google.com/macros/s/AKfycbyWBshYn8eDf5X8kcMhUlhOgT1GQr51pbBtaiQC0nI8GrA_F1vjhgvyZ7N5ib9ypIYVPA/exec";
-const SK="de_batt_lms_v4";
-const SSK="de_batt_sess_v4";
+const {useState,useEffect,useRef,useCallback}=React;
+
+// ─── STORAGE KEYS ──────────────────────────────────────────────────────────
+const STORAGE_KEY_STATE  = 'lms_state_v5';
+const STORAGE_KEY_USERS  = 'lms_users_v5';
+const STORAGE_KEY_SESS   = 'lms_sess_v5';
+const DRIVE = "https://drive.google.com/drive/folders/1GS_pPVVEaw1-YmuXYxPrHYATZuUFAaYn";
+
+// ─── DEFAULT USERS (passwords stored here, DE can change) ──────────────────
+const DEFAULT_USERS = [
+  {u:"DE",d:"Divisional Engineer",r:"DE",pw:"de2024"},
+  {u:"CC",d:"Chief Clerk",r:"CC",pw:"cc2024"},
+  {u:"MO1",d:"Management Officer 1",r:"MO",pw:"mo2024"},
+  {u:"MO2",d:"Management Officer 2",r:"MO",pw:"mo2024"},
+  {u:"MO3",d:"Management Officer 3",r:"MO",pw:"mo2024"},
+  {u:"MO4",d:"Management Officer 4",r:"MO",pw:"mo2024"},
+  {u:"DO1",d:"Development Officer 1",r:"DO",pw:"do2024"},
+  {u:"DO2",d:"Development Officer 2",r:"DO",pw:"do2024"},
+  {u:"STO KADUWELA",d:"STO Kaduwela",r:"STO",pw:"sto2024"},
+  {u:"STO MAHARAGAMA",d:"STO Maharagama",r:"STO",pw:"sto2024"},
+  {u:"STO NUGEGODA",d:"STO Nugegoda",r:"STO",pw:"sto2024"},
+  {u:"STO KOLONNAWA",d:"STO Kolonnawa",r:"STO",pw:"sto2024"},
+  {u:"KADUWELA TO1",d:"Kaduwela TO1",r:"TO",pw:"to2024"},
+  {u:"KADUWELA TO2",d:"Kaduwela TO2",r:"TO",pw:"to2024"},
+  {u:"KADUWELA TO3",d:"Kaduwela TO3",r:"TO",pw:"to2024"},
+  {u:"KOLONNAWA TO1",d:"Kolonnawa TO1",r:"TO",pw:"to2024"},
+  {u:"KOLONNAWA TO2",d:"Kolonnawa TO2",r:"TO",pw:"to2024"},
+  {u:"NUGEGODA TO1",d:"Nugegoda TO1",r:"TO",pw:"to2024"},
+  {u:"NUGEGODA TO2",d:"Nugegoda TO2",r:"TO",pw:"to2024"},
+  {u:"MAHARAGAMA TO1",d:"Maharagama TO1",r:"TO",pw:"to2024"},
+  {u:"MAHARAGAMA TO2",d:"Maharagama TO2",r:"TO",pw:"to2024"},
+];
+
 const EMPTY_STATE={inL:[],outL:[],notifications:[],inC:1,outC:1};
 
-let USERS=[
-  {u:"DE",d:"Divisional Engineer",r:"DE"},
-  {u:"CC",d:"Chief Clerk",r:"CC"},
-  {u:"MO1",d:"Management Officer 1",r:"MO"},
-  {u:"MO2",d:"Management Officer 2",r:"MO"},
-  {u:"MO3",d:"Management Officer 3",r:"MO"},
-  {u:"MO4",d:"Management Officer 4",r:"MO"},
-  {u:"DO1",d:"Development Officer 1",r:"DO"},
-  {u:"DO2",d:"Development Officer 2",r:"DO"},
-  {u:"STO KADUWELA",d:"STO Kaduwela",r:"STO"},
-  {u:"STO MAHARAGAMA",d:"STO Maharagama",r:"STO"},
-  {u:"STO NUGEGODA",d:"STO Nugegoda",r:"STO"},
-  {u:"STO KOLONNAWA",d:"STO Kolonnawa",r:"STO"},
-  {u:"KADUWELA TO1",d:"Kaduwela TO1",r:"TO"},
-  {u:"KADUWELA TO2",d:"Kaduwela TO2",r:"TO"},
-  {u:"KADUWELA TO3",d:"Kaduwela TO3",r:"TO"},
-  {u:"KOLONNAWA TO1",d:"Kolonnawa TO1",r:"TO"},
-  {u:"KOLONNAWA TO2",d:"Kolonnawa TO2",r:"TO"},
-  {u:"NUGEGODA TO1",d:"Nugegoda TO1",r:"TO"},
-  {u:"NUGEGODA TO2",d:"Nugegoda TO2",r:"TO"},
-  {u:"MAHARAGAMA TO1",d:"Maharagama TO1",r:"TO"},
-  {u:"MAHARAGAMA TO2",d:"Maharagama TO2",r:"TO"},
-];
-let ASSIGNABLE=USERS.filter(u=>u.u!=="DE");
+// ─── PERSISTENT STORAGE (window.storage API) ──────────────────────────────
+async function storageSave(key,value,shared=true){
+  try{
+    const result=await window.storage.set(key,JSON.stringify(value),shared);
+    return !!result;
+  }catch(e){
+    // Fallback to localStorage
+    try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}
+  }
+}
+async function storageLoad(key,shared=true){
+  try{
+    const result=await window.storage.get(key,shared);
+    if(result&&result.value)return JSON.parse(result.value);
+    return null;
+  }catch{
+    // Fallback to localStorage
+    try{const v=localStorage.getItem(key);return v?JSON.parse(v):null;}catch{return null;}
+  }
+}
+
+// ─── SESSION (localStorage only - per browser) ────────────────────────────
+function ldSess(){try{const s=localStorage.getItem(STORAGE_KEY_SESS);return s?JSON.parse(s):null;}catch{return null;}}
+function svSess(u){try{u?localStorage.setItem(STORAGE_KEY_SESS,JSON.stringify(u)):localStorage.removeItem(STORAGE_KEY_SESS);}catch{}}
+
+// ─── CONSTS ───────────────────────────────────────────────────────────────
 const FROM_OPTS=["DCS Engineering","Director Building","Director Engineering","Ministry of Provincial Councils","Divisional Secretariat","Local Government","Others"];
 const TO_OPTS=["DE","CC","MO1","MO2","MO3","MO4","DO1","DO2","STO KADUWELA","STO MAHARAGAMA","STO NUGEGODA","STO KOLONNAWA","Others"];
 const OUT_TO=["DCS Engineering","Director Building","Director Engineering","Ministry of Provincial Councils","Divisional Secretariat","Local Government","Others"];
 const SC={pending_de:"#e67e22",de_reviewed:"#2980b9",ongoing:"#8e44ad",done:"#27ae60",attended:"#16a085",pending:"#95a5a6"};
 const SL={pending_de:"Pending DE Review",de_reviewed:"DE Reviewed",ongoing:"Ongoing",done:"Done",attended:"Attended",pending:"Pending"};
+const ROLE_COLORS={DE:"#003580",CC:"#1a5276",MO:"#6c3483",DO:"#0e6655",STO:"#784212",TO:"#1a5276"};
 
-function setUsers(users){if(Array.isArray(users)&&users.length){USERS=users;ASSIGNABLE=USERS.filter(u=>u.u!=="DE");}}
-async function api(action,payload={}){
-  if(!GAS_WEB_APP_URL)throw new Error('Set GAS_WEB_APP_URL after deploying Apps Script.');
-  const r=await fetch(GAS_WEB_APP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,...payload})});
-  if(!r.ok)throw new Error('API request failed');
-  const data=await r.json();
-  if(data&&data.users)setUsers(data.users);
-  if(data&&data.ok===false)throw new Error(data.error||'API request failed');
-  return data;
-}
-async function bootstrap(){const data=await api('bootstrap');return data.state||EMPTY_STATE;}
-async function ldS(){return bootstrap();}
-async function svS(s){const data=await api('saveState',{state:s});return data.state||s;}
-async function markNotificationsRead(username){const data=await api('markNotificationsRead',{username});return data.state||EMPTY_STATE;}
-function ldSess(){try{const s=localStorage.getItem(SSK);if(s)return JSON.parse(s);}catch{}return null;}
-function svSess(u){try{u?localStorage.setItem(SSK,JSON.stringify(u)):localStorage.removeItem(SSK);}catch{}}
 function mkRef(t,c){const d=new Date();return`DEO_Batt_${String(d.getFullYear()).slice(2)}_${String(d.getMonth()+1).padStart(2,'0')}_${String(d.getDate()).padStart(2,'0')}_${t}_${String(c).padStart(2,'0')}`;}
 function fd(d){return d?new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'-';}
 function fdt(d){return d?new Date(d).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'-';}
 
+// ─── UI HELPERS ────────────────────────────────────────────────────────────
 function Bdg({s}){return <span className="badge" style={{background:SC[s]||'#999'}}>{SL[s]||s}</span>;}
 function Fld({l,v}){return <div style={{marginBottom:9}}><div className="fl">{l}</div><div className="fv">{v||'-'}</div></div>;}
-function Mod({title,onClose,children}){
+function Mod({title,onClose,children,maxW}){
   return <div className="mo" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
-    <div className="mb">
+    <div className="mb" style={maxW?{maxWidth:maxW}:{}}>
       <div className="mh"><span className="mt">{title}</span><button className="mc" onClick={onClose}>✕</button></div>
       <div className="mbd">{children}</div>
     </div>
   </div>;
 }
+function SCard({label,value,color,onClick}){
+  return <div className="sc" onClick={onClick} style={{borderTop:`4px solid ${color}`,cursor:onClick?'pointer':'default',transition:'transform .15s'}}
+    onMouseEnter={e=>{if(onClick)e.currentTarget.style.transform='translateY(-2px)';}}
+    onMouseLeave={e=>{e.currentTarget.style.transform='';}}>
+    <div className="sv" style={{color}}>{value}</div>
+    <div className="sl">{label}</div>
+    {onClick&&<div style={{fontSize:10,color:'#aaa',marginTop:3}}>Click to view</div>}
+  </div>;
+}
+function Toast({message,isErr,onClose}){
+  useEffect(()=>{if(!message)return;const t=setTimeout(onClose,3400);return()=>clearTimeout(t);},[message]);
+  if(!message)return null;
+  return <div className={`toast${isErr?' err':''}`}>{message}</div>;
+}
+function SaveIndicator({saving}){
+  if(!saving)return null;
+  return <div className="save-indicator"><span style={{animation:'spin 1s linear infinite',display:'inline-block'}}>⟳</span> Saving…</div>;
+}
+
+// ─── FILE VIEWER ───────────────────────────────────────────────────────────
 function drivePreviewUrl(fileId,fileUrl){
   if(fileId)return `https://drive.google.com/file/d/${fileId}/preview`;
   const m=String(fileUrl||'').match(/\/d\/([^/]+)/);
@@ -143,37 +187,6 @@ function FullDocView({src,fn,onClose}){
     </div>
   </div>;
 }
-
-/* Single file view (for legacy letters) */
-function FView({fd:fdata,fn,ft,fileUrl,fileId}){
-  const [full,setFull]=useState(false);
-  if(fileUrl||fileId){
-    const src=drivePreviewUrl(fileId,fileUrl);
-    return <div style={{marginTop:11,border:'1px solid #ddd',borderRadius:6,overflow:'hidden'}}>
-      <div onClick={()=>setFull(true)} style={{cursor:'zoom-in',height:420,background:'#f8f9fb'}}>
-        <iframe src={src} title={fn||'Document Preview'} style={{width:'100%',height:'100%',border:'none',pointerEvents:'none',background:'#fff'}}/>
-      </div>
-      <div style={{padding:'9px 12px',background:'#f5f5f5',display:'flex',gap:10,alignItems:'center',justifyContent:'space-between',flexWrap:'wrap'}}>
-        <span style={{fontSize:12,color:'#555'}}>📎 {fn||'Attachment'}</span>
-        <button className="btn bp bsm" onClick={()=>setFull(true)}>Full View</button>
-      </div>
-      {full&&<FullDocView src={src} fn={fn} onClose={()=>setFull(false)}/>}
-    </div>
-  }
-  if(!fdata)return null;
-  const src=`data:${ft};base64,${fdata}`;
-  return <div style={{marginTop:11,border:'1px solid #ddd',borderRadius:6,overflow:'hidden'}}>
-    {ft?.startsWith('image/')&&<img src={src} alt={fn} style={{maxWidth:'100%',display:'block'}}/>}
-    {ft==='application/pdf'&&<iframe src={src} style={{width:'100%',height:380,border:'none'}} title={fn}/>}
-    {ft&&!ft.startsWith('image/')&&ft!=='application/pdf'&&<div style={{padding:14,fontSize:13,color:'#666',background:'#fafafa'}}>Preview not available for this file type.</div>}
-    <div style={{padding:'7px 12px',background:'#f5f5f5',display:'flex',gap:10,alignItems:'center'}}>
-      <span style={{fontSize:12,color:'#555'}}>📎 {fn}</span>
-      <a href={src} download={fn} style={{color:'#005bb5',fontSize:12,fontWeight:600,textDecoration:'none'}}>⬇ Download</a>
-    </div>
-  </div>;
-}
-
-/* Multi-file attachments viewer */
 function AttachmentsView({attachments}){
   const [full,setFull]=useState(null);
   if(!attachments||attachments.length===0)return null;
@@ -210,8 +223,6 @@ function AttachmentsView({attachments}){
     {full&&<FullDocView src={full.src} fn={full.fn} onClose={()=>setFull(null)}/>}
   </div>;
 }
-
-/* Multi-file uploader widget */
 function MultiFileUploader({files,onChange}){
   const inputRef=useRef(null);
   const [drag,setDrag]=useState(false);
@@ -234,7 +245,7 @@ function MultiFileUploader({files,onChange}){
       onDrop={e=>{e.preventDefault();setDrag(false);addFiles(e.dataTransfer.files);}}>
       <div style={{fontSize:22,marginBottom:5}}>📁</div>
       <div style={{fontSize:13,color:'#555',fontWeight:600}}>Click or drag &amp; drop files here</div>
-      <div style={{fontSize:11,color:'#999',marginTop:3}}>Images, PDFs, Word documents — multiple files allowed</div>
+      <div style={{fontSize:11,color:'#999',marginTop:3}}>Images, PDFs, Word docs — multiple allowed</div>
       <input ref={inputRef} type="file" multiple accept="image/*,.pdf,.doc,.docx" style={{display:'none'}}
         onChange={e=>addFiles(e.target.files)}/>
     </div>
@@ -247,21 +258,13 @@ function MultiFileUploader({files,onChange}){
   </div>;
 }
 
-function Toast({message,onClose}){
-  useEffect(()=>{if(!message)return;const t=setTimeout(onClose,3200);return()=>clearTimeout(t);},[message]);
-  if(!message)return null;
-  return <div className="toast">{message}</div>;
-}
-
-function LoginPage({onLogin}){
+// ─── LOGIN PAGE ────────────────────────────────────────────────────────────
+function LoginPage({onLogin,users}){
   const [u,su]=useState('');const [p,sp]=useState('');const [e,se]=useState('');
-  const [busy,setBusy]=useState(false);
-  const go=async()=>{
-    if(busy)return;
-    setBusy(true);se('');
-    try{const r=await api('login',{username:u,password:p});onLogin(r.user);}
-    catch(err){se(err.message||'Invalid username or password.');}
-    finally{setBusy(false);}
+  const go=()=>{
+    const found=users.find(x=>x.u.toLowerCase()===u.trim().toLowerCase());
+    if(!found||found.pw!==p){se('Invalid username or password.');return;}
+    onLogin({u:found.u,d:found.d,r:found.r});
   };
   return <div style={{minHeight:'100vh',background:'linear-gradient(135deg,#001f5b,#003580,#005bb5)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:16}}>
     <div style={{background:'#fff',borderRadius:12,boxShadow:'0 20px 60px rgba(0,0,0,.4)',maxWidth:420,width:'100%',overflow:'hidden'}}>
@@ -274,23 +277,31 @@ function LoginPage({onLogin}){
         <div className="fg"><label className="flb">Username</label><input className="fi" value={u} onChange={e=>su(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()} placeholder="e.g. DE, CC, MO1…"/></div>
         <div className="fg"><label className="flb">Password</label><input className="fi" type="password" value={p} onChange={e=>sp(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()}/></div>
         {e&&<div className="ab ae">{e}</div>}
-        <button className="btn bp" style={{width:'100%',padding:'10px'}} onClick={go} disabled={busy}>{busy?'Signing In...':'Sign In'}</button>
+        <button className="btn bp" style={{width:'100%',padding:'10px'}} onClick={go}>Sign In</button>
       </div>
     </div>
     <div style={{color:'rgba(255,255,255,.4)',fontSize:11,marginTop:16}}>© 2026 Divisional Engineer's Office, Battaramulla</div>
   </div>;
 }
 
+// ─── TOP NAV ──────────────────────────────────────────────────────────────
 function TopNav({user,page,setPage,onLogout,notifications,onMarkNotificationsRead}){
   const [showN,setShowN]=useState(false);
   const unread=notifications.filter(n=>!n.read).length;
+  const isDE=user.r==='DE';
   const isAdmin=['DE','CC'].includes(user.r);
-  const tabs=[{id:'dash',l:'🏠 Dashboard'},{id:'in',l:'📥 In Letters'},...(!['STO','TO'].includes(user.r)?[{id:'out',l:'📤 Out Letters'}]:[]),...(isAdmin?[{id:'rep',l:'📊 Reports'}]:[])];
+  const tabs=[
+    {id:'dash',l:'🏠 Dashboard'},
+    {id:'in',l:'📥 In Letters'},
+    ...(!['STO','TO'].includes(user.r)?[{id:'out',l:'📤 Out Letters'}]:[]),
+    ...(isAdmin?[{id:'rep',l:'📊 Reports'}]:[]),
+    ...(isDE?[{id:'users',l:'👤 Manage Users'}]:[]),
+  ];
   return <div style={{background:'linear-gradient(to right,#001f5b,#003580)',boxShadow:'0 2px 10px rgba(0,0,0,.2)',position:'sticky',top:0,zIndex:100}}>
     <div style={{display:'flex',alignItems:'center',padding:'10px 18px',gap:10,borderBottom:'1px solid rgba(255,255,255,.1)'}}>
       <div style={{flex:1}}>
         <div style={{color:'#fff',fontWeight:800,fontSize:15}}>DE Office – Battaramulla &nbsp;|&nbsp; Letter Management System</div>
-        <div style={{color:'rgba(255,255,255,.45)',fontSize:11,marginTop:1}}>Engineering Branch</div>
+        <div style={{color:'rgba(255,255,255,.45)',fontSize:11,marginTop:1}}>Engineering Branch · Data saved permanently</div>
       </div>
       <div style={{textAlign:'right',marginRight:6}}>
         <div style={{color:'#fff',fontSize:12,fontWeight:600}}>{user.d}</div>
@@ -302,7 +313,7 @@ function TopNav({user,page,setPage,onLogout,notifications,onMarkNotificationsRea
       </button>
       <button className="btn" style={{background:'rgba(255,255,255,.12)',border:'1px solid rgba(255,255,255,.2)',color:'#fff',fontSize:12}} onClick={onLogout}>Logout</button>
     </div>
-    <div style={{display:'flex',padding:'0 18px'}}>
+    <div style={{display:'flex',padding:'0 18px',overflowX:'auto'}}>
       {tabs.map(t=><button key={t.id} className={`nb${page===t.id?' act':''}`} onClick={()=>setPage(t.id)}>{t.l}</button>)}
     </div>
     {showN&&<Mod title="Notifications" onClose={()=>setShowN(false)}>
@@ -317,41 +328,31 @@ function TopNav({user,page,setPage,onLogout,notifications,onMarkNotificationsRea
           </div>)}
         </div>}
       {unread>0&&<div className="fr" style={{justifyContent:'flex-end',marginTop:13}}>
-        <button className="btn bp bsm" onClick={()=>onMarkNotificationsRead()}>Mark All Read</button>
+        <button className="btn bp bsm" onClick={()=>{onMarkNotificationsRead();setShowN(false);}}>Mark All Read</button>
       </div>}
     </Mod>}
   </div>;
 }
 
-function SCard({label,value,color,onClick}){
-  return <div className="sc" onClick={onClick} style={{borderTop:`4px solid ${color}`,cursor:onClick?'pointer':'default'}}
-    onMouseEnter={e=>{if(onClick)e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.transition='transform .15s';}}
-    onMouseLeave={e=>{e.currentTarget.style.transform='';}}>
-    <div className="sv" style={{color}}>{value}</div>
-    <div className="sl">{label}</div>
-    {onClick&&<div style={{fontSize:10,color:'#aaa',marginTop:3}}>Click to view</div>}
-  </div>;
-}
-
-function UpInForm({user,onClose,state,onSave}){
+// ─── UPLOAD FORMS ─────────────────────────────────────────────────────────
+function UpInForm({user,onClose,state,onSave,users}){
+  const ASSIGNABLE=users.filter(u=>u.u!=="DE");
   const [f,sf]=useState({ref:'',dr:'',from:'',fromO:'',to:'',toO:'',subj:'',desc:'',asgn:[]});
   const [files,setFiles]=useState([]);
   const set=(k,v)=>sf(x=>({...x,[k]:v}));
   const tog=u=>sf(x=>({...x,asgn:x.asgn.includes(u)?x.asgn.filter(a=>a!==u):[...x.asgn,u]}));
   const sub=()=>{
-    if(!f.dr||!f.from||!f.subj){alert('Fill required fields.');return;}
+    if(!f.dr||!f.from||!f.subj){alert('Fill required fields (Date, From, Subject).');return;}
     const ref=f.ref.trim()||mkRef('In',state.inC);
     const frm=f.from==='Others'?f.fromO:f.from;
     const to=f.to==='Others'?f.toO:f.to;
-    const asgn=f.asgn.map(u=>({u,d:USERS.find(x=>x.u===u).d,s:'pending',seen:null}));
-    // Keep first file in legacy fd/fn/ft fields for backward compat; rest in attachments array
+    const asgn=f.asgn.map(u=>({u,d:users.find(x=>x.u===u)?.d||u,s:'pending',seen:null}));
     const first=files[0]||null;
-    const attachments=files.length>0?files:[];
     onSave({
       id:crypto.randomUUID(),ref,dr:f.dr,du:new Date().toISOString(),by:user.u,
       from:frm,to:to||'DE',subj:f.subj,desc:f.desc,
       fd:first?.fd,fn:first?.fn,ft:first?.ft,
-      attachments,
+      attachments:files.length>0?files:[],
       asgn,status:user.r==='DE'?'de_reviewed':'pending_de',note:''
     });
     onClose();
@@ -364,17 +365,14 @@ function UpInForm({user,onClose,state,onSave}){
         <select className="fi" value={f.to} onChange={e=>set('to',e.target.value)}><option value="">-- Select --</option>{TO_OPTS.map(o=><option key={o}>{o}</option>)}</select>
         {f.to==='Others'&&<input className="fi" style={{marginTop:5}} placeholder="Specify…" value={f.toO} onChange={e=>set('toO',e.target.value)}/>}
       </div>
-      <div className="fg" style={{gridColumn:'span 2'}}><label className="flb">From *</label>
+      <div className="fg"><label className="flb">From *</label>
         <select className="fi" value={f.from} onChange={e=>set('from',e.target.value)}><option value="">-- Select --</option>{FROM_OPTS.map(o=><option key={o}>{o}</option>)}</select>
         {f.from==='Others'&&<input className="fi" style={{marginTop:5}} placeholder="Specify…" value={f.fromO} onChange={e=>set('fromO',e.target.value)}/>}
       </div>
       <div className="fg" style={{gridColumn:'span 2'}}><label className="flb">Subject *</label><input className="fi" value={f.subj} onChange={e=>set('subj',e.target.value)}/></div>
     </div>
     <div className="fg"><label className="flb">Description</label><textarea className="fi" style={{height:65,resize:'vertical'}} value={f.desc} onChange={e=>set('desc',e.target.value)}/></div>
-    <div className="fg">
-      <label className="flb">Attachments (multiple allowed)</label>
-      <MultiFileUploader files={files} onChange={setFiles}/>
-    </div>
+    <div className="fg"><label className="flb">Attachments (multiple allowed)</label><MultiFileUploader files={files} onChange={setFiles}/></div>
     {user.r==='DE'&&<div className="fg"><label className="flb">Assign To</label>
       <div style={{display:'flex',flexWrap:'wrap',marginTop:5}}>
         {ASSIGNABLE.map(a=><label key={a.u} className={`at${f.asgn.includes(a.u)?' sel':''}`}><input type="checkbox" checked={f.asgn.includes(a.u)} onChange={()=>tog(a.u)} style={{margin:0}}/> {a.d}</label>)}
@@ -386,7 +384,6 @@ function UpInForm({user,onClose,state,onSave}){
     </div>
   </div>;
 }
-
 function UpOutForm({user,onClose,state,onSave}){
   const [f,sf]=useState({ref:'',ds:'',subj:'',to:'',toO:'',desc:''});
   const [files,setFiles]=useState([]);
@@ -395,13 +392,12 @@ function UpOutForm({user,onClose,state,onSave}){
     if(!f.ds||!f.subj||!f.to){alert('Fill required fields.');return;}
     const ref=f.ref.trim()||mkRef('Out',state.outC);
     const first=files[0]||null;
-    const attachments=files.length>0?files:[];
     onSave({
       id:crypto.randomUUID(),ref,ds:f.ds,du:new Date().toISOString(),by:user.u,
       from:'DE Battaramulla',to:f.to==='Others'?f.toO:f.to,
       subj:f.subj,desc:f.desc,
       fd:first?.fd,fn:first?.fn,ft:first?.ft,
-      attachments
+      attachments:files.length>0?files:[]
     });
     onClose();
   };
@@ -410,17 +406,14 @@ function UpOutForm({user,onClose,state,onSave}){
       <div className="fg"><label className="flb">Reference No</label><input className="fi" value={f.ref} onChange={e=>set('ref',e.target.value)} placeholder={mkRef('Out',state.outC)}/></div>
       <div className="fg"><label className="flb">Date Sent *</label><input type="date" className="fi" value={f.ds} onChange={e=>set('ds',e.target.value)}/></div>
       <div className="fg"><label className="flb">From</label><input className="fi" value="DE Battaramulla" readOnly style={{background:'#f5f5f5',color:'#888'}}/></div>
-      <div className="fg" style={{gridColumn:'span 2'}}><label className="flb">To *</label>
+      <div className="fg"><label className="flb">To *</label>
         <select className="fi" value={f.to} onChange={e=>set('to',e.target.value)}><option value="">-- Select --</option>{OUT_TO.map(o=><option key={o}>{o}</option>)}</select>
         {f.to==='Others'&&<input className="fi" style={{marginTop:5}} placeholder="Specify…" value={f.toO} onChange={e=>set('toO',e.target.value)}/>}
       </div>
       <div className="fg" style={{gridColumn:'span 2'}}><label className="flb">Subject *</label><input className="fi" value={f.subj} onChange={e=>set('subj',e.target.value)}/></div>
     </div>
     <div className="fg"><label className="flb">Description</label><textarea className="fi" style={{height:65,resize:'vertical'}} value={f.desc} onChange={e=>set('desc',e.target.value)}/></div>
-    <div className="fg">
-      <label className="flb">Attachments (multiple allowed)</label>
-      <MultiFileUploader files={files} onChange={setFiles}/>
-    </div>
+    <div className="fg"><label className="flb">Attachments</label><MultiFileUploader files={files} onChange={setFiles}/></div>
     <div className="fr" style={{justifyContent:'flex-end'}}>
       <button className="btn bs" onClick={onClose}>Cancel</button>
       <button className="btn bp" onClick={sub}>Upload Out Letter</button>
@@ -428,7 +421,9 @@ function UpOutForm({user,onClose,state,onSave}){
   </div>;
 }
 
-function InModal({letter,user,onClose,onUpdate}){
+// ─── IN MODAL ─────────────────────────────────────────────────────────────
+function InModal({letter,user,onClose,onUpdate,users}){
+  const ASSIGNABLE=users.filter(u=>u.u!=="DE");
   const [note,setNote]=useState(letter.note||'');
   const [editN,setEditN]=useState(false);
   const [showA,setShowA]=useState(false);
@@ -455,7 +450,7 @@ function InModal({letter,user,onClose,onUpdate}){
   const saveNote=()=>{onUpdate(letter.id,{note});setEditN(false);};
   const approve=()=>onUpdate(letter.id,{status:'de_reviewed',note,deAt:new Date().toISOString()});
   const saveA=()=>{
-    const asgn=newA.map(u=>({u,d:USERS.find(x=>x.u===u).d,s:letter.asgn.find(a=>a.u===u)?.s||'pending',seen:letter.asgn.find(a=>a.u===u)?.seen||null}));
+    const asgn=newA.map(u=>({u,d:users.find(x=>x.u===u)?.d||u,s:letter.asgn.find(a=>a.u===u)?.s||'pending',seen:letter.asgn.find(a=>a.u===u)?.seen||null}));
     onUpdate(letter.id,{asgn});setShowA(false);
   };
   const saveMoreFiles=()=>{
@@ -466,7 +461,6 @@ function InModal({letter,user,onClose,onUpdate}){
   };
   const my=letter.asgn.find(a=>a.u===user.u);
   const canEdit=my&&letter.status!=='pending_de';
-  // Attachments: prefer the new array; fall back to legacy single file
   const attachments=letter.attachments&&letter.attachments.length>0
     ?letter.attachments
     :(letter.fd?[{fd:letter.fd,fn:letter.fn,ft:letter.ft}]:[]);
@@ -523,7 +517,7 @@ function InModal({letter,user,onClose,onUpdate}){
 
     {isDE&&<div style={{marginTop:14,display:'flex',gap:8,flexWrap:'wrap'}}>
       <button className="btn bp bsm" onClick={()=>setShowA(true)}>👤 Manage Assignees</button>
-      {letter.status==='pending_de'&&<button className="btn bp" style={{background:'#27ae60'}} onClick={approve}>✅ Approve & DE Reviewed</button>}
+      {letter.status==='pending_de'&&<button className="btn bgreen" onClick={approve}>✅ Approve & DE Reviewed</button>}
     </div>}
     {isDE&&letter.status==='pending_de'&&<div className="ab aw" style={{marginTop:12}}><strong>⚡ Action Required:</strong> Review, add note, then Approve.</div>}
 
@@ -541,6 +535,7 @@ function InModal({letter,user,onClose,onUpdate}){
   </Mod>;
 }
 
+// ─── OUT MODAL ────────────────────────────────────────────────────────────
 function OutModal({letter,onClose}){
   const attachments=letter.attachments&&letter.attachments.length>0
     ?letter.attachments
@@ -557,6 +552,7 @@ function OutModal({letter,onClose}){
   </Mod>;
 }
 
+// ─── DASHBOARD ────────────────────────────────────────────────────────────
 function Dashboard({user,state,setPage,setFS}){
   const {inL}=state;
   const isDE=user.r==='DE',isCC=user.r==='CC',isAdmin=isDE||isCC;
@@ -586,18 +582,20 @@ function Dashboard({user,state,setPage,setFS}){
     </div>
     {isDE&&unseen>0&&<div className="ab aw">👁 <strong>{unseen}</strong> assigned task{unseen>1?'s':''} not yet seen by assignees.</div>}
     {isDE&&pde>0&&<div className="ab aw">⚡ <strong>{pde}</strong> letter{pde>1?'s':''} pending your review.</div>}
+    <div className="ab ai" style={{marginTop:10}}>✅ All data is saved permanently and will persist after refresh. Anyone assigned can access their letters anytime.</div>
     <div style={{fontSize:13,color:'#666',fontStyle:'italic',marginTop:10}}>Welcome, <strong>{user.d}</strong>. Click any card to filter.</div>
   </div>;
 }
 
-function InPage({user,state,onAdd,onUpd,fs,setFS}){
+// ─── IN PAGE ──────────────────────────────────────────────────────────────
+function InPage({user,state,onAdd,onUpd,fs,setFS,users}){
   const [sel,setSel]=useState(null);
   const [showUp,setShowUp]=useState(false);
   const [srch,setSrch]=useState('');
   const [sf,setSf]=useState(fs||'');
   const [pf,setPf]=useState('');
-  const [df,setDf]=useState('');
-  const [dt,setDt]=useState('');
+  const [df,setDf]=useState('');const [dt,setDt]=useState('');
+  const ASSIGNABLE=users.filter(u=>u.u!=="DE");
   useEffect(()=>{if(fs!==undefined){setSf(fs);setFS(undefined);}},[fs]);
   const isDE=user.r==='DE',isCC=user.r==='CC',isAdmin=isDE||isCC,isST=['STO','TO'].includes(user.r);
   let ls=state.inL;
@@ -646,16 +644,15 @@ function InPage({user,state,onAdd,onUpd,fs,setFS}){
         </tr>;
       })}</tbody>
     </table></div>}
-    {sel&&<InModal letter={state.inL.find(l=>l.id===sel.id)||sel} user={user} onClose={()=>setSel(null)} onUpdate={(id,p)=>{onUpd(id,p);}}/>}
-    {showUp&&<Mod title="Upload Incoming Letter" onClose={()=>setShowUp(false)}><UpInForm user={user} onClose={()=>setShowUp(false)} state={state} onSave={l=>{onAdd(l);setShowUp(false);}}/></Mod>}
+    {sel&&<InModal letter={state.inL.find(l=>l.id===sel.id)||sel} user={user} onClose={()=>setSel(null)} onUpdate={(id,p)=>{onUpd(id,p);}} users={users}/>}
+    {showUp&&<Mod title="Upload Incoming Letter" onClose={()=>setShowUp(false)}><UpInForm user={user} onClose={()=>setShowUp(false)} state={state} onSave={l=>{onAdd(l);setShowUp(false);}} users={users}/></Mod>}
   </div>;
 }
 
+// ─── OUT PAGE ─────────────────────────────────────────────────────────────
 function OutPage({user,state,onAdd}){
-  const [sel,setSel]=useState(null);
-  const [showUp,setShowUp]=useState(false);
-  const [srch,setSrch]=useState('');
-  const [df,setDf]=useState('');const [dt,setDt]=useState('');
+  const [sel,setSel]=useState(null);const [showUp,setShowUp]=useState(false);
+  const [srch,setSrch]=useState('');const [df,setDf]=useState('');const [dt,setDt]=useState('');
   const isAdmin=['DE','CC'].includes(user.r);
   let ls=state.outL;
   if(!isAdmin) ls=ls.filter(l=>l.by===user.u);
@@ -673,7 +670,7 @@ function OutPage({user,state,onAdd}){
     </div>
     {ls.length===0?<div style={{textAlign:'center',color:'#aaa',padding:50}}>No outgoing letters.</div>:
     <div className="tw"><table>
-      <thead><tr><th>Ref No</th><th>Date Sent</th><th>From</th><th>To</th><th>Subject</th><th>Files</th><th>Uploaded By</th><th></th></tr></thead>
+      <thead><tr><th>Ref No</th><th>Date Sent</th><th>From</th><th>To</th><th>Subject</th><th>Files</th><th>By</th><th></th></tr></thead>
       <tbody>{ls.map(l=>{
         const fileCount=(l.attachments||[]).length||(l.fd?1:0);
         return <tr key={l.id} onClick={()=>setSel(l)} style={{cursor:'pointer'}}>
@@ -690,7 +687,9 @@ function OutPage({user,state,onAdd}){
   </div>;
 }
 
-function RepPage({state}){
+// ─── REPORTS ──────────────────────────────────────────────────────────────
+function RepPage({state,users}){
+  const ASSIGNABLE=users.filter(u=>u.u!=="DE");
   const [pf,setPf]=useState('');const [sf,setSf]=useState('');const [df,setDf]=useState('');const [dt,setDt]=useState('');
   const {inL,outL}=state;
   let ls=inL;
@@ -730,54 +729,224 @@ function RepPage({state}){
   </div>;
 }
 
+// ─── USER MANAGEMENT PAGE (DE only) ───────────────────────────────────────
+function UsersPage({users,onSaveUsers,currentUser}){
+  const [editUser,setEditUser]=useState(null);
+  const [newPw,setNewPw]=useState('');
+  const [newPw2,setNewPw2]=useState('');
+  const [newDName,setNewDName]=useState('');
+  const [err,setErr]=useState('');
+  const [ok,setOk]=useState('');
+  const [showAdd,setShowAdd]=useState(false);
+  const [newU,setNewU]=useState({u:'',d:'',r:'MO',pw:''});
+
+  const openEdit=u=>{setEditUser(u);setNewPw('');setNewPw2('');setNewDName(u.d);setErr('');setOk('');};
+  const saveEdit=()=>{
+    if(!newDName.trim()){setErr('Display name required.');return;}
+    if(newPw&&newPw.length<4){setErr('Password must be at least 4 characters.');return;}
+    if(newPw&&newPw!==newPw2){setErr('Passwords do not match.');return;}
+    const updated=users.map(u=>u.u===editUser.u?{...u,d:newDName.trim(),...(newPw?{pw:newPw}:{})}:u);
+    onSaveUsers(updated);
+    setOk('User updated successfully.');
+    setErr('');
+    setTimeout(()=>{setEditUser(null);setOk('');},1200);
+  };
+  const addUser=()=>{
+    if(!newU.u.trim()||!newU.d.trim()||!newU.pw.trim()){alert('Fill all fields.');return;}
+    if(users.find(u=>u.u.toLowerCase()===newU.u.trim().toLowerCase())){alert('Username already exists.');return;}
+    const updated=[...users,{u:newU.u.trim().toUpperCase(),d:newU.d.trim(),r:newU.r,pw:newU.pw}];
+    onSaveUsers(updated);
+    setShowAdd(false);
+    setNewU({u:'',d:'',r:'MO',pw:''});
+  };
+  const removeUser=u=>{
+    if(u.u===currentUser.u){alert('Cannot remove yourself.');return;}
+    if(!window.confirm(`Remove user ${u.d}? This cannot be undone.`))return;
+    onSaveUsers(users.filter(x=>x.u!==u.u));
+  };
+
+  const roleGroups=[
+    {r:'DE',label:'Divisional Engineer'},
+    {r:'CC',label:'Chief Clerk'},
+    {r:'MO',label:'Management Officers'},
+    {r:'DO',label:'Development Officers'},
+    {r:'STO',label:'Sub-Technical Officers'},
+    {r:'TO',label:'Technical Officers'},
+  ];
+
+  return <div>
+    <div className="ab ai" style={{marginBottom:16}}>
+      🔑 <strong>DE Only:</strong> Manage login credentials for all staff. Changes take effect immediately. Staff must use their updated password on next login.
+    </div>
+    <div style={{display:'flex',justifyContent:'flex-end',marginBottom:14}}>
+      <button className="btn bgreen" onClick={()=>setShowAdd(true)}>+ Add New User</button>
+    </div>
+    {roleGroups.map(({r,label})=>{
+      const grp=users.filter(u=>u.r===r);
+      if(!grp.length)return null;
+      return <div key={r} style={{marginBottom:20}}>
+        <div style={{fontWeight:700,color:ROLE_COLORS[r]||'#003580',fontSize:13,marginBottom:8,paddingBottom:4,borderBottom:`2px solid ${ROLE_COLORS[r]||'#003580'}20`}}>
+          {label} <span style={{fontSize:11,color:'#999',fontWeight:400}}>({grp.length})</span>
+        </div>
+        {grp.map(u=><div key={u.u} className="user-card">
+          <div>
+            <div style={{fontWeight:700,fontSize:14,color:'#1a1a2e'}}>{u.d}</div>
+            <div style={{fontSize:12,color:'#888',marginTop:2}}>
+              Username: <strong style={{color:'#003580'}}>{u.u}</strong>
+              &nbsp;&nbsp;·&nbsp;&nbsp;
+              Password: <span style={{letterSpacing:2}}>{'•'.repeat(Math.min(u.pw?.length||4,8))}</span>
+              &nbsp;&nbsp;·&nbsp;&nbsp;
+              <span className="role-badge">{u.r}</span>
+            </div>
+          </div>
+          <div className="fr">
+            <button className="btn bp bsm" onClick={()=>openEdit(u)}>✏️ Edit</button>
+            {u.u!==currentUser.u&&<button className="btn bdanger bsm" onClick={()=>removeUser(u)}>🗑</button>}
+          </div>
+        </div>)}
+      </div>;
+    })}
+
+    {editUser&&<Mod title={`Edit User: ${editUser.d}`} onClose={()=>setEditUser(null)}>
+      <div className="fg"><label className="flb">Display Name</label>
+        <input className="fi" value={newDName} onChange={e=>setNewDName(e.target.value)} placeholder="Full name/title"/>
+      </div>
+      <div className="fg"><label className="flb">Username (cannot change)</label>
+        <input className="fi" value={editUser.u} readOnly style={{background:'#f5f5f5',color:'#888'}}/>
+      </div>
+      <div className="fg"><label className="flb">Role</label>
+        <input className="fi" value={editUser.r} readOnly style={{background:'#f5f5f5',color:'#888'}}/>
+      </div>
+      <div className="g2">
+        <div className="fg"><label className="flb">New Password <span style={{color:'#aaa',fontWeight:400}}>(leave blank to keep)</span></label>
+          <input className="fi" type="password" value={newPw} onChange={e=>setNewPw(e.target.value)} placeholder="New password…"/>
+        </div>
+        <div className="fg"><label className="flb">Confirm Password</label>
+          <input className="fi" type="password" value={newPw2} onChange={e=>setNewPw2(e.target.value)} placeholder="Repeat new password…"/>
+        </div>
+      </div>
+      {err&&<div className="ab ae">{err}</div>}
+      {ok&&<div className="ab ag">{ok}</div>}
+      <div className="fr" style={{justifyContent:'flex-end',marginTop:6}}>
+        <button className="btn bs" onClick={()=>setEditUser(null)}>Cancel</button>
+        <button className="btn bp" onClick={saveEdit}>💾 Save Changes</button>
+      </div>
+    </Mod>}
+
+    {showAdd&&<Mod title="Add New User" onClose={()=>setShowAdd(false)}>
+      <div className="g2">
+        <div className="fg"><label className="flb">Username *</label>
+          <input className="fi" value={newU.u} onChange={e=>setNewU(x=>({...x,u:e.target.value}))} placeholder="e.g. MO5"/>
+        </div>
+        <div className="fg"><label className="flb">Role *</label>
+          <select className="fi" value={newU.r} onChange={e=>setNewU(x=>({...x,r:e.target.value}))}>
+            <option value="CC">CC</option><option value="MO">MO</option><option value="DO">DO</option>
+            <option value="STO">STO</option><option value="TO">TO</option>
+          </select>
+        </div>
+        <div className="fg" style={{gridColumn:'span 2'}}><label className="flb">Display Name *</label>
+          <input className="fi" value={newU.d} onChange={e=>setNewU(x=>({...x,d:e.target.value}))} placeholder="e.g. Management Officer 5"/>
+        </div>
+        <div className="fg" style={{gridColumn:'span 2'}}><label className="flb">Password *</label>
+          <input className="fi" type="password" value={newU.pw} onChange={e=>setNewU(x=>({...x,pw:e.target.value}))} placeholder="Set initial password"/>
+        </div>
+      </div>
+      <div className="fr" style={{justifyContent:'flex-end',marginTop:6}}>
+        <button className="btn bs" onClick={()=>setShowAdd(false)}>Cancel</button>
+        <button className="btn bgreen" onClick={addUser}>➕ Add User</button>
+      </div>
+    </Mod>}
+  </div>;
+}
+
+// ─── APP ROOT ─────────────────────────────────────────────────────────────
 function App(){
   const [user,setUser]=useState(()=>ldSess());
   const [page,setPage]=useState('dash');
   const [state,setState]=useState(EMPTY_STATE);
+  const [users,setUsers]=useState(DEFAULT_USERS);
   const [loading,setLoading]=useState(true);
-  const [err,setErr]=useState('');
+  const [saving,setSaving]=useState(false);
   const [toast,setToast]=useState('');
+  const [toastErr,setToastErr]=useState(false);
   const [fs,setFS]=useState(undefined);
+
+  // Load persisted state and users on mount
   useEffect(()=>{
     let alive=true;
-    ldS()
-      .then(s=>{if(alive){setState({...EMPTY_STATE,...s});setErr('');}})
-      .catch(error=>{if(alive)setErr(error.message||'Could not load shared data from Google Sheets.');})
-      .finally(()=>{if(alive)setLoading(false);});
+    Promise.all([
+      storageLoad(STORAGE_KEY_STATE,true),
+      storageLoad(STORAGE_KEY_USERS,true),
+    ]).then(([savedState,savedUsers])=>{
+      if(!alive)return;
+      if(savedState){setState({...EMPTY_STATE,...savedState});}
+      if(savedUsers&&Array.isArray(savedUsers)&&savedUsers.length){setUsers(savedUsers);}
+    }).catch(()=>{
+      // Use defaults if storage fails
+    }).finally(()=>{if(alive)setLoading(false);});
     return()=>{alive=false;};
   },[]);
-  const sv=async(n,message='Saved successfully.')=>{
-    setState(n);
-    try{const saved=await svS(n);setState(saved);setErr('');setToast(message);}
-    catch{setErr('Could not save to Google Sheets/Drive. Check the Apps Script deployment.');}
+
+  const showToast=(msg,isErr=false)=>{setToast(msg);setToastErr(isErr);};
+
+  const sv=async(newState,message='Saved.')=>{
+    setState(newState);
+    setSaving(true);
+    try{
+      await storageSave(STORAGE_KEY_STATE,newState,true);
+      showToast(message);
+    }catch{
+      showToast('Save failed — data may not persist.', true);
+    }finally{setSaving(false);}
   };
-  const addIn=l=>sv({...state,inL:[...state.inL,l],inC:state.inC+1},'Incoming letter uploaded successfully.');
-  const updIn=(id,p)=>sv({...state,inL:state.inL.map(l=>l.id===id?{...l,...p}:l)},'Letter updated successfully.');
-  const addOut=l=>sv({...state,outL:[...state.outL,l],outC:state.outC+1},'Outgoing letter uploaded successfully.');
+
+  const svUsers=async(newUsers)=>{
+    setUsers(newUsers);
+    setSaving(true);
+    try{
+      await storageSave(STORAGE_KEY_USERS,newUsers,true);
+      showToast('User list saved permanently.');
+    }catch{
+      showToast('Could not save users.', true);
+    }finally{setSaving(false);}
+  };
+
+  const addIn=l=>sv({...state,inL:[...state.inL,l],inC:state.inC+1},'Incoming letter saved permanently.');
+  const updIn=(id,p)=>sv({...state,inL:state.inL.map(l=>l.id===id?{...l,...p}:l)},'Letter updated & saved.');
+  const addOut=l=>sv({...state,outL:[...state.outL,l],outC:state.outC+1},'Outgoing letter saved permanently.');
+
   const myNotifications=(state.notifications||[]).filter(n=>user&&n.username===user.u);
-  const markMyNotifications=async()=>{
-    if(!user)return;
-    try{const saved=await markNotificationsRead(user.u);setState({...EMPTY_STATE,...saved});setErr('');setToast('Notifications marked as read.');}
-    catch{setErr('Could not update notifications. Check the Apps Script deployment.');}
+  const markMyNotifications=()=>{
+    const updated={...state,notifications:(state.notifications||[]).map(n=>n.username===user.u?{...n,read:true}:n)};
+    sv(updated,'Notifications marked as read.');
   };
-  const login=u=>{setUser(u);svSess(u);setPage('dash');setToast('Signed in successfully.');};
+
+  const login=u=>{setUser(u);svSess(u);setPage('dash');showToast('Signed in successfully.');};
   const logout=()=>{setUser(null);svSess(null);setPage('dash');};
-  if(!user)return <LoginPage onLogin={login}/>;
-  if(loading)return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#f0f2f7',color:'#003580',fontWeight:800}}>Loading shared data...</div>;
+
+  if(!user)return <LoginPage onLogin={login} users={users}/>;
+  if(loading)return <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'#f0f2f7',gap:12}}>
+    <div style={{color:'#003580',fontWeight:800,fontSize:16}}>Loading…</div>
+    <div style={{color:'#888',fontSize:13}}>Restoring saved data</div>
+  </div>;
+
   return <div style={{minHeight:'100vh',background:'#f0f2f7'}}>
-    <Toast message={toast} onClose={()=>setToast('')}/>
+    <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    <Toast message={toast} isErr={toastErr} onClose={()=>setToast('')}/>
+    <SaveIndicator saving={saving}/>
     <TopNav user={user} page={page} setPage={p=>{setPage(p);setFS(undefined);}} onLogout={logout} notifications={myNotifications} onMarkNotificationsRead={markMyNotifications}/>
     <div style={{maxWidth:1280,margin:'0 auto',padding:'18px 14px'}}>
-      {err&&<div className="ab ae">{err}</div>}
       <div style={{background:'#fff',borderRadius:10,boxShadow:'0 2px 12px rgba(0,0,0,.08)',padding:'20px 22px',minHeight:400}}>
         {page==='dash'&&<><h2 style={{margin:'0 0 16px',color:'#003580',fontSize:16,fontWeight:800}}>🏠 Dashboard</h2><Dashboard user={user} state={state} setPage={setPage} setFS={setFS}/></>}
-        {page==='in'&&<><h2 style={{margin:'0 0 14px',color:'#003580',fontSize:16,fontWeight:800}}>📥 Incoming Letters</h2><InPage user={user} state={state} onAdd={addIn} onUpd={updIn} fs={fs} setFS={setFS}/></>}
+        {page==='in'&&<><h2 style={{margin:'0 0 14px',color:'#003580',fontSize:16,fontWeight:800}}>📥 Incoming Letters</h2><InPage user={user} state={state} onAdd={addIn} onUpd={updIn} fs={fs} setFS={setFS} users={users}/></>}
         {page==='out'&&!['STO','TO'].includes(user.r)&&<><h2 style={{margin:'0 0 14px',color:'#003580',fontSize:16,fontWeight:800}}>📤 Outgoing Letters</h2><OutPage user={user} state={state} onAdd={addOut}/></>}
-        {page==='rep'&&['DE','CC'].includes(user.r)&&<><h2 style={{margin:'0 0 14px',color:'#003580',fontSize:16,fontWeight:800}}>📊 Reports</h2><RepPage state={state}/></>}
+        {page==='rep'&&['DE','CC'].includes(user.r)&&<><h2 style={{margin:'0 0 14px',color:'#003580',fontSize:16,fontWeight:800}}>📊 Reports</h2><RepPage state={state} users={users}/></>}
+        {page==='users'&&user.r==='DE'&&<><h2 style={{margin:'0 0 14px',color:'#003580',fontSize:16,fontWeight:800}}>👤 Manage Users & Passwords</h2><UsersPage users={users} onSaveUsers={svUsers} currentUser={user}/></>}
       </div>
     </div>
   </div>;
 }
+
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
