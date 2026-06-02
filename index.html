@@ -3,951 +3,1609 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>DE Office Battaramulla - Letter Management</title>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<title>DE Office Battaramulla – Letter Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
+:root{
+  --navy:#0a1628;--navy2:#102040;--blue:#1a56db;--blue2:#1e40af;--accent:#3b82f6;
+  --gold:#f59e0b;--green:#059669;--red:#dc2626;--purple:#7c3aed;--orange:#ea580c;
+  --bg:#f1f5fb;--surface:#ffffff;--surface2:#f8fafc;--border:#dde3ef;--border2:#e8edf5;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --font:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;
+  --r:8px;--r2:12px;--shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);
+  --shadow2:0 4px 24px rgba(10,22,40,.12),0 1px 4px rgba(0,0,0,.08);
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f7;min-height:100vh}
-input,select,textarea,button{font-family:inherit}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+input,select,textarea,button{font-family:var(--font);font-size:14px}
 button{cursor:pointer}
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-thumb{background:#c0c8da;border-radius:3px}
-.tw{overflow-x:auto}
+a{color:var(--blue);text-decoration:none}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:#f1f5fb}
+::-webkit-scrollbar-thumb{background:#c4d0e8;border-radius:3px}
+
+/* LAYOUT */
+.page-wrap{max-width:1300px;margin:0 auto;padding:20px 16px}
+.card{background:var(--surface);border-radius:var(--r2);box-shadow:var(--shadow);border:1px solid var(--border2)}
+.card-body{padding:22px 24px}
+
+/* FORM ELEMENTS */
+.lbl{display:block;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.inp{display:block;width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r);font-size:13px;color:var(--text);background:#fff;outline:none;transition:border-color .15s}
+.inp:focus{border-color:var(--blue)}
+.inp:read-only{background:var(--surface2);color:var(--text3)}
+.fg{margin-bottom:14px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.span2{grid-column:span 2}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:var(--r);font-weight:600;font-size:13px;transition:all .15s;white-space:nowrap}
+.btn:hover{opacity:.88;transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-success{background:var(--green);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text2)}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue);opacity:1}
+.btn-sm{padding:5px 11px;font-size:12px;border-radius:6px}
+.btn-gold{background:var(--gold);color:#fff}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px}
+.badge-pending_de{background:#fff3e0;color:#e65100;border:1px solid #ffcc80}
+.badge-de_reviewed{background:#e3f2fd;color:#1565c0;border:1px solid #90caf9}
+.badge-ongoing{background:#f3e5f5;color:#6a1b9a;border:1px solid #ce93d8}
+.badge-done{background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7}
+.badge-attended{background:#e0f7fa;color:#006064;border:1px solid #80deea}
+.badge-pending{background:#f5f5f5;color:#616161;border:1px solid #e0e0e0}
+
+/* ALERTS */
+.alert{padding:11px 14px;border-radius:var(--r);font-size:13px;margin-bottom:12px;display:flex;gap:10px;align-items:flex-start}
+.alert-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.alert-warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.alert-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.alert-ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(10,22,40,.55);z-index:500;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;backdrop-filter:blur(2px)}
+.modal{background:#fff;border-radius:var(--r2);width:100%;max-width:780px;box-shadow:var(--shadow2);margin:auto;max-height:92vh;display:flex;flex-direction:column;animation:mIn .2s ease}
+@keyframes mIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+.modal-hd{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:var(--navy);border-radius:var(--r2) var(--r2) 0 0;flex-shrink:0}
+.modal-title{color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+.modal-close{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:3px 10px;font-size:16px;line-height:1}
+.modal-body{padding:22px 24px;overflow-y:auto;flex:1}
+
+/* TOP NAV */
+.topnav{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);box-shadow:0 2px 12px rgba(10,22,40,.3);position:sticky;top:0;z-index:100}
+.topnav-bar{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.07)}
+.nav-logo{color:#fff;font-weight:800;font-size:15px;letter-spacing:-.2px}
+.nav-sub{color:rgba(255,255,255,.35);font-size:11px;margin-top:1px}
+.nav-user{text-align:right}
+.nav-user-name{color:#fff;font-size:12px;font-weight:600}
+.nav-user-role{color:rgba(255,255,255,.4);font-size:11px}
+.nav-tabs{display:flex;padding:0 16px;overflow-x:auto;gap:2px}
+.nav-tab{padding:9px 16px;background:transparent;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,.55);font-weight:500;font-size:13px;transition:all .15s;white-space:nowrap}
+.nav-tab.active{color:#fff;border-bottom-color:var(--accent);background:rgba(255,255,255,.07)}
+.nav-tab:hover:not(.active){color:#fff;background:rgba(255,255,255,.05)}
+.notif-btn{position:relative;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:var(--r);padding:6px 12px;font-size:13px}
+.notif-dot{position:absolute;top:-5px;right:-5px;background:#ef4444;color:#fff;border-radius:20px;font-size:10px;font-weight:800;min-width:18px;padding:1px 4px;text-align:center}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--border2)}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:#003580;color:#fff;padding:9px 10px;text-align:left;font-size:12px;white-space:nowrap}
-td{padding:7px 10px;border-bottom:1px solid #eee;vertical-align:middle}
-tr:nth-child(even){background:#f9f9fb}
-tr:hover td{background:#e8f0fd}
-.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;color:#fff;white-space:nowrap}
-.fl{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
-.fv{font-size:13px;color:#333}
-.fg{margin-bottom:13px}
-.flb{display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
-.fi{display:block;width:100%;padding:8px 11px;border:1.5px solid #ccd6e8;border-radius:6px;font-size:13px;outline:none}
-.fi:focus{border-color:#005bb5}
-.btn{padding:8px 18px;border:none;border-radius:6px;font-weight:600;font-size:13px}
-.btn:hover{opacity:.85}
-.bp{background:#003580;color:#fff}
-.bs{background:#e8e8e8;color:#333}
-.bsm{padding:4px 11px;font-size:12px}
-.bdanger{background:#c0392b;color:#fff}
-.bgreen{background:#27ae60;color:#fff}
-.mo{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
-.mb{background:#fff;border-radius:10px;width:100%;max-width:740px;box-shadow:0 20px 60px rgba(0,0,0,.3);margin-top:20px;max-height:90vh;display:flex;flex-direction:column}
-.mh{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#003580;border-radius:10px 10px 0 0;flex-shrink:0}
-.mt{color:#fff;font-weight:700;font-size:14px}
-.mc{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:3px 9px;font-size:15px}
-.mbd{padding:20px;overflow-y:auto;flex:1}
-.sc{background:#fff;border-radius:10px;padding:15px 16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.07)}
-.sv{font-size:28px;font-weight:800;line-height:1}
-.sl{font-size:12px;color:#666;margin-top:4px}
-.nb{padding:9px 15px;background:transparent;border:none;border-bottom:3px solid transparent;color:rgba(255,255,255,.75);font-weight:500;font-size:13px}
-.nb.act{background:rgba(255,255,255,.15);border-bottom-color:#fff;color:#fff;font-weight:700}
-.nb:hover{color:#fff;background:rgba(255,255,255,.08)}
-.at{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border:1px solid #ccc;border-radius:20px;font-size:12px;background:#f9f9f9;margin:3px;cursor:pointer}
-.at.sel{border:2px solid #005bb5;background:#e8f0fd;font-weight:600}
-.ab{padding:9px 13px;border-radius:6px;font-size:13px;margin-bottom:11px}
-.ae{background:#fff0f0;border:1px solid #ffcccc;color:#c0392b}
-.aw{background:#fffbe6;border:1px solid #ffe58f;color:#856404}
-.ai{background:#f0f7ff;border:1px solid #b3d4ff;color:#003580}
-.ag{background:#f0fff4;border:1px solid #b3f5d0;color:#0a6640}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
-.fr{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.na{background:#f0f7ff;border:1px solid #b3d4ff;border-radius:8px;padding:13px;margin-top:13px}
-.toast{position:fixed;right:18px;bottom:18px;z-index:2000;background:#0f7b53;color:#fff;border-radius:8px;padding:11px 14px;box-shadow:0 10px 30px rgba(0,0,0,.22);font-size:13px;font-weight:700;max-width:min(360px,calc(100vw - 36px))}
-.toast.err{background:#c0392b}
-.file-drop{border:2px dashed #ccd6e8;border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:#fafbfd}
-.file-drop:hover,.file-drop.drag{border-color:#005bb5;background:#f0f7ff}
-.file-chip{display:inline-flex;align-items:center;gap:6px;background:#e8f0fd;border:1px solid #b3d4ff;border-radius:16px;padding:3px 10px 3px 8px;font-size:12px;margin:3px}
-.file-chip button{background:none;border:none;color:#c0392b;font-size:14px;line-height:1;padding:0;cursor:pointer;font-weight:700}
-.user-card{background:#fff;border:1px solid #dde3f0;border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10;margin-bottom:8px}
-.user-card:hover{background:#f5f8ff;border-color:#b3d4ff}
-.role-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;background:#e8f0fd;color:#003580}
-.save-indicator{position:fixed;top:60px;right:18px;z-index:1500;background:#003580;color:#fff;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+thead th{background:var(--navy);color:#fff;padding:10px 12px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
+tbody td{padding:10px 12px;border-bottom:1px solid var(--border2);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#f8fafc}
+tbody tr{cursor:pointer;transition:background .1s}
+
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:22px}
+.stat-card{background:#fff;border-radius:var(--r2);padding:16px 18px;border:1px solid var(--border2);box-shadow:var(--shadow);border-left:3px solid transparent;transition:all .2s;cursor:default}
+.stat-card.clickable{cursor:pointer}
+.stat-card.clickable:hover{transform:translateY(-2px);box-shadow:var(--shadow2)}
+.stat-val{font-size:32px;font-weight:800;font-family:var(--mono);line-height:1}
+.stat-lbl{font-size:11px;color:var(--text2);margin-top:5px;font-weight:500}
+.stat-hint{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* FILE UPLOAD */
+.drop-zone{border:2px dashed var(--border);border-radius:var(--r);padding:20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--blue);background:#eff6ff}
+.drop-icon{font-size:24px;margin-bottom:6px}
+.drop-text{font-size:13px;color:var(--text2);font-weight:500}
+.drop-hint{font-size:11px;color:var(--text3);margin-top:3px}
+.file-chip{display:inline-flex;align-items:center;gap:5px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:16px;padding:3px 10px;font-size:11px;font-weight:500;color:var(--blue2);margin:3px}
+.file-chip-rm{background:none;border:none;color:var(--red);font-size:14px;font-weight:700;padding:0;line-height:1}
+
+/* ASSIGN TAG */
+.assign-tag{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;background:#fff;cursor:pointer;transition:all .15s;margin:3px}
+.assign-tag.sel{border-color:var(--blue);background:#eff6ff;color:var(--blue2);font-weight:600}
+
+/* DRIVE LINK HINT */
+.drive-hint{background:#e8f5e9;border:1px solid #a5d6a7;border-radius:var(--r);padding:10px 13px;font-size:12px;color:#1b5e20;margin-top:8px}
+
+/* TOAST */
+.toast-container{position:fixed;right:18px;bottom:20px;z-index:1000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:#0f172a;color:#fff;border-radius:var(--r);padding:10px 16px;font-size:13px;font-weight:500;box-shadow:var(--shadow2);display:flex;align-items:center;gap:10px;animation:tIn .25s ease;max-width:360px;pointer-events:auto}
+.toast.err{background:#dc2626}
+.toast.ok{background:#059669}
+@keyframes tIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border2);margin:18px 0}
+
+/* USER CARD */
+.user-card{background:#fff;border:1px solid var(--border2);border-radius:var(--r);padding:13px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;transition:background .15s}
+.user-card:hover{background:var(--surface2)}
+
+/* SAVING INDICATOR */
+.saving-bar{position:fixed;top:0;left:0;right:0;z-index:999;height:3px;background:linear-gradient(90deg,var(--blue),var(--accent),var(--blue));background-size:200%;animation:progress 1.2s linear infinite}
+@keyframes progress{from{background-position:200% 0}to{background-position:-200% 0}}
+
+/* SEEN INDICATOR */
+.seen-yes{color:#059669;font-size:11px;font-weight:600}
+.seen-no{color:#dc2626;font-size:11px;font-weight:600}
+
+/* PRINT */
+@media print{.topnav,.btn,.overlay,.toast-container,.saving-bar{display:none!important}.card{box-shadow:none;border:1px solid #ccc}}
+
+/* RESPONSIVE */
+@media(max-width:640px){.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}.span2{grid-column:span 1}}
 </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-const {useState,useEffect,useRef,useCallback}=React;
+<div id="app"></div>
 
-// ─── STORAGE KEYS ──────────────────────────────────────────────────────────
-const STORAGE_KEY_STATE  = 'lms_state_v5';
-const STORAGE_KEY_USERS  = 'lms_users_v5';
-const STORAGE_KEY_SESS   = 'lms_sess_v5';
-const DRIVE = "https://drive.google.com/drive/folders/1GS_pPVVEaw1-YmuXYxPrHYATZuUFAaYn";
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// CONSTANTS & CONFIG
+// ═══════════════════════════════════════════════════════════════════════════
+const DRIVE_FOLDER = "https://drive.google.com/drive/folders/1k85Zb_yZoL9aGYQ9RZQhspQrnNjXW_Sb";
+const LS_STATE  = "lms_state_v6";
+const LS_USERS  = "lms_users_v6";
+const LS_SESSION = "lms_session_v6";
 
-// ─── DEFAULT USERS (passwords stored here, DE can change) ──────────────────
-const DEFAULT_USERS = [
-  {u:"DE",d:"Divisional Engineer",r:"DE",pw:"de2024"},
-  {u:"CC",d:"Chief Clerk",r:"CC",pw:"cc2024"},
-  {u:"MO1",d:"Management Officer 1",r:"MO",pw:"mo2024"},
-  {u:"MO2",d:"Management Officer 2",r:"MO",pw:"mo2024"},
-  {u:"MO3",d:"Management Officer 3",r:"MO",pw:"mo2024"},
-  {u:"MO4",d:"Management Officer 4",r:"MO",pw:"mo2024"},
-  {u:"DO1",d:"Development Officer 1",r:"DO",pw:"do2024"},
-  {u:"DO2",d:"Development Officer 2",r:"DO",pw:"do2024"},
-  {u:"STO KADUWELA",d:"STO Kaduwela",r:"STO",pw:"sto2024"},
-  {u:"STO MAHARAGAMA",d:"STO Maharagama",r:"STO",pw:"sto2024"},
-  {u:"STO NUGEGODA",d:"STO Nugegoda",r:"STO",pw:"sto2024"},
-  {u:"STO KOLONNAWA",d:"STO Kolonnawa",r:"STO",pw:"sto2024"},
-  {u:"KADUWELA TO1",d:"Kaduwela TO1",r:"TO",pw:"to2024"},
-  {u:"KADUWELA TO2",d:"Kaduwela TO2",r:"TO",pw:"to2024"},
-  {u:"KADUWELA TO3",d:"Kaduwela TO3",r:"TO",pw:"to2024"},
-  {u:"KOLONNAWA TO1",d:"Kolonnawa TO1",r:"TO",pw:"to2024"},
-  {u:"KOLONNAWA TO2",d:"Kolonnawa TO2",r:"TO",pw:"to2024"},
-  {u:"NUGEGODA TO1",d:"Nugegoda TO1",r:"TO",pw:"to2024"},
-  {u:"NUGEGODA TO2",d:"Nugegoda TO2",r:"TO",pw:"to2024"},
-  {u:"MAHARAGAMA TO1",d:"Maharagama TO1",r:"TO",pw:"to2024"},
-  {u:"MAHARAGAMA TO2",d:"Maharagama TO2",r:"TO",pw:"to2024"},
+const STATUS_LABELS = {
+  pending_de:  "Pending DE Review",
+  de_reviewed: "DE Reviewed",
+  ongoing:     "Ongoing",
+  done:        "Done",
+  attended:    "Attended",
+  pending:     "Pending"
+};
+
+const STATUS_COLORS = {
+  pending_de:  "#e65100",
+  de_reviewed: "#1565c0",
+  ongoing:     "#6a1b9a",
+  done:        "#1b5e20",
+  attended:    "#006064",
+  pending:     "#616161"
+};
+
+const FROM_OPTS = [
+  "DCS Engineering","Director Building","Director Engineering",
+  "Ministry of Provincial Councils","Divisional Secretariat","Local Government","Others"
+];
+const TO_IN_OPTS = [
+  "DE","CC","MO1","MO2","MO3","MO4","DO1","DO2",
+  "STO KADUWELA","STO MAHARAGAMA","STO NUGEGODA","STO KOLONNAWA","Others"
+];
+const OUT_TO_OPTS = [
+  "DCS Engineering","Director Building","Director Engineering",
+  "Ministry of Provincial Councils","Divisional Secretariat","Local Government","Others"
 ];
 
-const EMPTY_STATE={inL:[],outL:[],notifications:[],inC:1,outC:1};
+const DEFAULT_USERS = [
+  {u:"DE",     d:"Divisional Engineer",    r:"DE",  pw:"de2024"},
+  {u:"CC",     d:"Chief Clerk",            r:"CC",  pw:"cc2024"},
+  {u:"MO1",    d:"Management Officer 1",   r:"MO",  pw:"mo2024"},
+  {u:"MO2",    d:"Management Officer 2",   r:"MO",  pw:"mo2024"},
+  {u:"MO3",    d:"Management Officer 3",   r:"MO",  pw:"mo2024"},
+  {u:"MO4",    d:"Management Officer 4",   r:"MO",  pw:"mo2024"},
+  {u:"DO1",    d:"Development Officer 1",  r:"DO",  pw:"do2024"},
+  {u:"DO2",    d:"Development Officer 2",  r:"DO",  pw:"do2024"},
+  {u:"STO KADUWELA",  d:"STO Kaduwela",   r:"STO", pw:"sto2024"},
+  {u:"STO MAHARAGAMA",d:"STO Maharagama", r:"STO", pw:"sto2024"},
+  {u:"STO NUGEGODA",  d:"STO Nugegoda",   r:"STO", pw:"sto2024"},
+  {u:"STO KOLONNAWA", d:"STO Kolonnawa",  r:"STO", pw:"sto2024"},
+  {u:"KADUWELA TO1",  d:"Kaduwela TO1",   r:"TO",  pw:"to2024"},
+  {u:"KADUWELA TO2",  d:"Kaduwela TO2",   r:"TO",  pw:"to2024"},
+  {u:"KADUWELA TO3",  d:"Kaduwela TO3",   r:"TO",  pw:"to2024"},
+  {u:"KOLONNAWA TO1", d:"Kolonnawa TO1",  r:"TO",  pw:"to2024"},
+  {u:"KOLONNAWA TO2", d:"Kolonnawa TO2",  r:"TO",  pw:"to2024"},
+  {u:"NUGEGODA TO1",  d:"Nugegoda TO1",   r:"TO",  pw:"to2024"},
+  {u:"NUGEGODA TO2",  d:"Nugegoda TO2",   r:"TO",  pw:"to2024"},
+  {u:"MAHARAGAMA TO1",d:"Maharagama TO1", r:"TO",  pw:"to2024"},
+  {u:"MAHARAGAMA TO2",d:"Maharagama TO2", r:"TO",  pw:"to2024"},
+];
 
-// ─── PERSISTENT STORAGE (window.storage API) ──────────────────────────────
-async function storageSave(key,value,shared=true){
-  try{
-    const result=await window.storage.set(key,JSON.stringify(value),shared);
-    return !!result;
-  }catch(e){
-    // Fallback to localStorage
-    try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}
-  }
-}
-async function storageLoad(key,shared=true){
-  try{
-    const result=await window.storage.get(key,shared);
-    if(result&&result.value)return JSON.parse(result.value);
-    return null;
-  }catch{
-    // Fallback to localStorage
-    try{const v=localStorage.getItem(key);return v?JSON.parse(v):null;}catch{return null;}
-  }
-}
+const EMPTY_STATE = {inL:[], outL:[], inC:1, outC:1};
 
-// ─── SESSION (localStorage only - per browser) ────────────────────────────
-function ldSess(){try{const s=localStorage.getItem(STORAGE_KEY_SESS);return s?JSON.parse(s):null;}catch{return null;}}
-function svSess(u){try{u?localStorage.setItem(STORAGE_KEY_SESS,JSON.stringify(u)):localStorage.removeItem(STORAGE_KEY_SESS);}catch{}}
-
-// ─── CONSTS ───────────────────────────────────────────────────────────────
-const FROM_OPTS=["DCS Engineering","Director Building","Director Engineering","Ministry of Provincial Councils","Divisional Secretariat","Local Government","Others"];
-const TO_OPTS=["DE","CC","MO1","MO2","MO3","MO4","DO1","DO2","STO KADUWELA","STO MAHARAGAMA","STO NUGEGODA","STO KOLONNAWA","Others"];
-const OUT_TO=["DCS Engineering","Director Building","Director Engineering","Ministry of Provincial Councils","Divisional Secretariat","Local Government","Others"];
-const SC={pending_de:"#e67e22",de_reviewed:"#2980b9",ongoing:"#8e44ad",done:"#27ae60",attended:"#16a085",pending:"#95a5a6"};
-const SL={pending_de:"Pending DE Review",de_reviewed:"DE Reviewed",ongoing:"Ongoing",done:"Done",attended:"Attended",pending:"Pending"};
-const ROLE_COLORS={DE:"#003580",CC:"#1a5276",MO:"#6c3483",DO:"#0e6655",STO:"#784212",TO:"#1a5276"};
-
-function mkRef(t,c){const d=new Date();return`DEO_Batt_${String(d.getFullYear()).slice(2)}_${String(d.getMonth()+1).padStart(2,'0')}_${String(d.getDate()).padStart(2,'0')}_${t}_${String(c).padStart(2,'0')}`;}
-function fd(d){return d?new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'-';}
-function fdt(d){return d?new Date(d).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'-';}
-
-// ─── UI HELPERS ────────────────────────────────────────────────────────────
-function Bdg({s}){return <span className="badge" style={{background:SC[s]||'#999'}}>{SL[s]||s}</span>;}
-function Fld({l,v}){return <div style={{marginBottom:9}}><div className="fl">{l}</div><div className="fv">{v||'-'}</div></div>;}
-function Mod({title,onClose,children,maxW}){
-  return <div className="mo" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
-    <div className="mb" style={maxW?{maxWidth:maxW}:{}}>
-      <div className="mh"><span className="mt">{title}</span><button className="mc" onClick={onClose}>✕</button></div>
-      <div className="mbd">{children}</div>
-    </div>
-  </div>;
+// ═══════════════════════════════════════════════════════════════════════════
+// STORAGE — localStorage (reliable, persistent per browser)
+// Data export/import to Google Drive available via JSON backup
+// ═══════════════════════════════════════════════════════════════════════════
+function loadLS(key, fallback){
+  try{ const v=localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch{ return fallback; }
 }
-function SCard({label,value,color,onClick}){
-  return <div className="sc" onClick={onClick} style={{borderTop:`4px solid ${color}`,cursor:onClick?'pointer':'default',transition:'transform .15s'}}
-    onMouseEnter={e=>{if(onClick)e.currentTarget.style.transform='translateY(-2px)';}}
-    onMouseLeave={e=>{e.currentTarget.style.transform='';}}>
-    <div className="sv" style={{color}}>{value}</div>
-    <div className="sl">{label}</div>
-    {onClick&&<div style={{fontSize:10,color:'#aaa',marginTop:3}}>Click to view</div>}
-  </div>;
-}
-function Toast({message,isErr,onClose}){
-  useEffect(()=>{if(!message)return;const t=setTimeout(onClose,3400);return()=>clearTimeout(t);},[message]);
-  if(!message)return null;
-  return <div className={`toast${isErr?' err':''}`}>{message}</div>;
-}
-function SaveIndicator({saving}){
-  if(!saving)return null;
-  return <div className="save-indicator"><span style={{animation:'spin 1s linear infinite',display:'inline-block'}}>⟳</span> Saving…</div>;
-}
-
-// ─── FILE VIEWER ───────────────────────────────────────────────────────────
-function drivePreviewUrl(fileId,fileUrl){
-  if(fileId)return `https://drive.google.com/file/d/${fileId}/preview`;
-  const m=String(fileUrl||'').match(/\/d\/([^/]+)/);
-  return m?`https://drive.google.com/file/d/${m[1]}/preview`:fileUrl;
-}
-function FullDocView({src,fn,onClose}){
-  return <div className="mo" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
-    <div className="mb" style={{maxWidth:'min(1100px,96vw)',height:'92vh'}}>
-      <div className="mh"><span className="mt">{fn||'Document Preview'}</span><button className="mc" onClick={onClose}>✕</button></div>
-      <iframe src={src} title={fn||'Document Preview'} style={{width:'100%',height:'100%',border:'none',background:'#fff'}}/>
-    </div>
-  </div>;
-}
-function AttachmentsView({attachments}){
-  const [full,setFull]=useState(null);
-  if(!attachments||attachments.length===0)return null;
-  return <div style={{marginTop:11}}>
-    <div style={{fontWeight:700,color:'#003580',fontSize:12,marginBottom:7}}>📎 Attachments ({attachments.length})</div>
-    <div style={{display:'grid',gap:8}}>
-      {attachments.map((att,i)=>{
-        if(att.fileUrl||att.fileId){
-          const src=drivePreviewUrl(att.fileId,att.fileUrl);
-          return <div key={i} style={{border:'1px solid #ddd',borderRadius:6,overflow:'hidden'}}>
-            <div onClick={()=>setFull({src,fn:att.fn})} style={{cursor:'zoom-in',height:200,background:'#f8f9fb'}}>
-              <iframe src={src} title={att.fn||'Doc'} style={{width:'100%',height:'100%',border:'none',pointerEvents:'none'}}/>
-            </div>
-            <div style={{padding:'7px 12px',background:'#f5f5f5',display:'flex',gap:10,alignItems:'center',justifyContent:'space-between'}}>
-              <span style={{fontSize:12,color:'#555'}}>📎 {att.fn||`File ${i+1}`}</span>
-              <button className="btn bp bsm" onClick={()=>setFull({src,fn:att.fn})}>Full View</button>
-            </div>
-          </div>;
-        }
-        if(!att.fd)return null;
-        const src=`data:${att.ft};base64,${att.fd}`;
-        return <div key={i} style={{border:'1px solid #ddd',borderRadius:6,overflow:'hidden'}}>
-          {att.ft?.startsWith('image/')&&<img src={src} alt={att.fn} style={{maxWidth:'100%',maxHeight:280,display:'block',objectFit:'contain',background:'#f8f9fb'}}/>}
-          {att.ft==='application/pdf'&&<iframe src={src} style={{width:'100%',height:240,border:'none'}} title={att.fn}/>}
-          {att.ft&&!att.ft.startsWith('image/')&&att.ft!=='application/pdf'&&
-            <div style={{padding:12,fontSize:13,color:'#666',background:'#fafafa'}}>📄 {att.fn} — preview not available.</div>}
-          <div style={{padding:'7px 12px',background:'#f5f5f5',display:'flex',gap:10,alignItems:'center'}}>
-            <span style={{fontSize:12,color:'#555'}}>📎 {att.fn}</span>
-            <a href={src} download={att.fn} style={{color:'#005bb5',fontSize:12,fontWeight:600,textDecoration:'none'}}>⬇ Download</a>
-          </div>
-        </div>;
-      })}
-    </div>
-    {full&&<FullDocView src={full.src} fn={full.fn} onClose={()=>setFull(null)}/>}
-  </div>;
-}
-function MultiFileUploader({files,onChange}){
-  const inputRef=useRef(null);
-  const [drag,setDrag]=useState(false);
-  const readFile=fl=>new Promise(res=>{
-    const r=new FileReader();
-    r.onload=ev=>res({fd:ev.target.result.split(',')[1],fn:fl.name,ft:fl.type});
-    r.readAsDataURL(fl);
-  });
-  const addFiles=async flist=>{
-    const arr=Array.from(flist);
-    const read=await Promise.all(arr.map(readFile));
-    onChange([...files,...read]);
-  };
-  const remove=i=>onChange(files.filter((_,j)=>j!==i));
-  return <div>
-    <div className={`file-drop${drag?' drag':''}`}
-      onClick={()=>inputRef.current.click()}
-      onDragOver={e=>{e.preventDefault();setDrag(true);}}
-      onDragLeave={()=>setDrag(false)}
-      onDrop={e=>{e.preventDefault();setDrag(false);addFiles(e.dataTransfer.files);}}>
-      <div style={{fontSize:22,marginBottom:5}}>📁</div>
-      <div style={{fontSize:13,color:'#555',fontWeight:600}}>Click or drag &amp; drop files here</div>
-      <div style={{fontSize:11,color:'#999',marginTop:3}}>Images, PDFs, Word docs — multiple allowed</div>
-      <input ref={inputRef} type="file" multiple accept="image/*,.pdf,.doc,.docx" style={{display:'none'}}
-        onChange={e=>addFiles(e.target.files)}/>
-    </div>
-    {files.length>0&&<div style={{marginTop:8,display:'flex',flexWrap:'wrap',gap:2}}>
-      {files.map((f,i)=><span key={i} className="file-chip">
-        {f.ft?.startsWith('image/')?'🖼':'📄'} {f.fn}
-        <button title="Remove" onClick={e=>{e.stopPropagation();remove(i);}}>×</button>
-      </span>)}
-    </div>}
-  </div>;
-}
-
-// ─── LOGIN PAGE ────────────────────────────────────────────────────────────
-function LoginPage({onLogin,users}){
-  const [u,su]=useState('');const [p,sp]=useState('');const [e,se]=useState('');
-  const go=()=>{
-    const found=users.find(x=>x.u.toLowerCase()===u.trim().toLowerCase());
-    if(!found||found.pw!==p){se('Invalid username or password.');return;}
-    onLogin({u:found.u,d:found.d,r:found.r});
-  };
-  return <div style={{minHeight:'100vh',background:'linear-gradient(135deg,#001f5b,#003580,#005bb5)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:16}}>
-    <div style={{background:'#fff',borderRadius:12,boxShadow:'0 20px 60px rgba(0,0,0,.4)',maxWidth:420,width:'100%',overflow:'hidden'}}>
-      <div style={{background:'linear-gradient(135deg,#001f5b,#003580)',padding:'26px 24px 20px',textAlign:'center'}}>
-        <div style={{color:'#fff',fontWeight:800,fontSize:18,letterSpacing:'.5px'}}>DE Office – Battaramulla</div>
-        <div style={{color:'#b3d4ff',fontSize:13,marginTop:4}}>Letter Management System</div>
-        <div style={{color:'rgba(255,255,255,.4)',fontSize:11,marginTop:2}}>Engineering Branch</div>
-      </div>
-      <div style={{padding:'24px 28px'}}>
-        <div className="fg"><label className="flb">Username</label><input className="fi" value={u} onChange={e=>su(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()} placeholder="e.g. DE, CC, MO1…"/></div>
-        <div className="fg"><label className="flb">Password</label><input className="fi" type="password" value={p} onChange={e=>sp(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()}/></div>
-        {e&&<div className="ab ae">{e}</div>}
-        <button className="btn bp" style={{width:'100%',padding:'10px'}} onClick={go}>Sign In</button>
-      </div>
-    </div>
-    <div style={{color:'rgba(255,255,255,.4)',fontSize:11,marginTop:16}}>© 2026 DE Office, Battaramulla</div>
-  </div>;
-}
-
-// ─── TOP NAV ──────────────────────────────────────────────────────────────
-function TopNav({user,page,setPage,onLogout,notifications,onMarkNotificationsRead}){
-  const [showN,setShowN]=useState(false);
-  const unread=notifications.filter(n=>!n.read).length;
-  const isDE=user.r==='DE';
-  const isAdmin=['DE','CC'].includes(user.r);
-  const tabs=[
-    {id:'dash',l:'🏠 Dashboard'},
-    {id:'in',l:'📥 In Letters'},
-    ...(!['STO','TO'].includes(user.r)?[{id:'out',l:'📤 Out Letters'}]:[]),
-    ...(isAdmin?[{id:'rep',l:'📊 Reports'}]:[]),
-    ...(isDE?[{id:'users',l:'👤 Manage Users'}]:[]),
-  ];
-  return <div style={{background:'linear-gradient(to right,#001f5b,#003580)',boxShadow:'0 2px 10px rgba(0,0,0,.2)',position:'sticky',top:0,zIndex:100}}>
-    <div style={{display:'flex',alignItems:'center',padding:'10px 18px',gap:10,borderBottom:'1px solid rgba(255,255,255,.1)'}}>
-      <div style={{flex:1}}>
-        <div style={{color:'#fff',fontWeight:800,fontSize:15}}>DE Office – Battaramulla &nbsp;|&nbsp; Letter Management System</div>
-        <div style={{color:'rgba(255,255,255,.45)',fontSize:11,marginTop:1}}>Engineering Branch · Data saved permanently</div>
-      </div>
-      <div style={{textAlign:'right',marginRight:6}}>
-        <div style={{color:'#fff',fontSize:12,fontWeight:600}}>{user.d}</div>
-        <div style={{color:'rgba(255,255,255,.5)',fontSize:11}}>{user.r} · {user.u}</div>
-      </div>
-      <button className="btn" style={{background:'rgba(255,255,255,.12)',border:'1px solid rgba(255,255,255,.2)',color:'#fff',fontSize:12,position:'relative'}} onClick={()=>setShowN(true)}>
-        🔔
-        {unread>0&&<span style={{position:'absolute',top:-7,right:-7,background:'#e74c3c',color:'#fff',borderRadius:20,fontSize:10,fontWeight:800,minWidth:18,padding:'2px 5px'}}>{unread}</span>}
-      </button>
-      <button className="btn" style={{background:'rgba(255,255,255,.12)',border:'1px solid rgba(255,255,255,.2)',color:'#fff',fontSize:12}} onClick={onLogout}>Logout</button>
-    </div>
-    <div style={{display:'flex',padding:'0 18px',overflowX:'auto'}}>
-      {tabs.map(t=><button key={t.id} className={`nb${page===t.id?' act':''}`} onClick={()=>setPage(t.id)}>{t.l}</button>)}
-    </div>
-    {showN&&<Mod title="Notifications" onClose={()=>setShowN(false)}>
-      {notifications.length===0?<div style={{textAlign:'center',color:'#aaa',padding:30}}>No notifications.</div>:
-        <div style={{display:'grid',gap:8}}>
-          {notifications.slice(0,30).map(n=><div key={n.id} style={{border:'1px solid #e5e8f0',borderRadius:6,padding:'10px 12px',background:n.read?'#fff':'#f0f7ff'}}>
-            <div style={{display:'flex',justifyContent:'space-between',gap:10}}>
-              <strong style={{fontSize:13,color:'#003580'}}>{n.title}</strong>
-              <span style={{fontSize:11,color:'#888',whiteSpace:'nowrap'}}>{fdt(n.createdAt)}</span>
-            </div>
-            <div style={{fontSize:13,color:'#444',marginTop:3}}>{n.message}</div>
-          </div>)}
-        </div>}
-      {unread>0&&<div className="fr" style={{justifyContent:'flex-end',marginTop:13}}>
-        <button className="btn bp bsm" onClick={()=>{onMarkNotificationsRead();setShowN(false);}}>Mark All Read</button>
-      </div>}
-    </Mod>}
-  </div>;
-}
-
-// ─── UPLOAD FORMS ─────────────────────────────────────────────────────────
-function UpInForm({user,onClose,state,onSave,users}){
-  const ASSIGNABLE=users.filter(u=>u.u!=="DE");
-  const [f,sf]=useState({ref:'',dr:'',from:'',fromO:'',to:'',toO:'',subj:'',desc:'',asgn:[]});
-  const [files,setFiles]=useState([]);
-  const set=(k,v)=>sf(x=>({...x,[k]:v}));
-  const tog=u=>sf(x=>({...x,asgn:x.asgn.includes(u)?x.asgn.filter(a=>a!==u):[...x.asgn,u]}));
-  const sub=()=>{
-    if(!f.dr||!f.from||!f.subj){alert('Fill required fields (Date, From, Subject).');return;}
-    const ref=f.ref.trim()||mkRef('In',state.inC);
-    const frm=f.from==='Others'?f.fromO:f.from;
-    const to=f.to==='Others'?f.toO:f.to;
-    const asgn=f.asgn.map(u=>({u,d:users.find(x=>x.u===u)?.d||u,s:'pending',seen:null}));
-    const first=files[0]||null;
-    onSave({
-      id:crypto.randomUUID(),ref,dr:f.dr,du:new Date().toISOString(),by:user.u,
-      from:frm,to:to||'DE',subj:f.subj,desc:f.desc,
-      fd:first?.fd,fn:first?.fn,ft:first?.ft,
-      attachments:files.length>0?files:[],
-      asgn,status:user.r==='DE'?'de_reviewed':'pending_de',note:''
-    });
-    onClose();
-  };
-  return <div>
-    <div className="g2">
-      <div className="fg"><label className="flb">Reference No</label><input className="fi" value={f.ref} onChange={e=>set('ref',e.target.value)} placeholder={mkRef('In',state.inC)}/></div>
-      <div className="fg"><label className="flb">Date Received *</label><input type="date" className="fi" value={f.dr} onChange={e=>set('dr',e.target.value)}/></div>
-      <div className="fg"><label className="flb">To</label>
-        <select className="fi" value={f.to} onChange={e=>set('to',e.target.value)}><option value="">-- Select --</option>{TO_OPTS.map(o=><option key={o}>{o}</option>)}</select>
-        {f.to==='Others'&&<input className="fi" style={{marginTop:5}} placeholder="Specify…" value={f.toO} onChange={e=>set('toO',e.target.value)}/>}
-      </div>
-      <div className="fg"><label className="flb">From *</label>
-        <select className="fi" value={f.from} onChange={e=>set('from',e.target.value)}><option value="">-- Select --</option>{FROM_OPTS.map(o=><option key={o}>{o}</option>)}</select>
-        {f.from==='Others'&&<input className="fi" style={{marginTop:5}} placeholder="Specify…" value={f.fromO} onChange={e=>set('fromO',e.target.value)}/>}
-      </div>
-      <div className="fg" style={{gridColumn:'span 2'}}><label className="flb">Subject *</label><input className="fi" value={f.subj} onChange={e=>set('subj',e.target.value)}/></div>
-    </div>
-    <div className="fg"><label className="flb">Description</label><textarea className="fi" style={{height:65,resize:'vertical'}} value={f.desc} onChange={e=>set('desc',e.target.value)}/></div>
-    <div className="fg"><label className="flb">Attachments (multiple allowed)</label><MultiFileUploader files={files} onChange={setFiles}/></div>
-    {user.r==='DE'&&<div className="fg"><label className="flb">Assign To</label>
-      <div style={{display:'flex',flexWrap:'wrap',marginTop:5}}>
-        {ASSIGNABLE.map(a=><label key={a.u} className={`at${f.asgn.includes(a.u)?' sel':''}`}><input type="checkbox" checked={f.asgn.includes(a.u)} onChange={()=>tog(a.u)} style={{margin:0}}/> {a.d}</label>)}
-      </div>
-    </div>}
-    <div className="fr" style={{justifyContent:'flex-end',marginTop:6}}>
-      <button className="btn bs" onClick={onClose}>Cancel</button>
-      <button className="btn bp" onClick={sub}>Upload Letter</button>
-    </div>
-  </div>;
-}
-function UpOutForm({user,onClose,state,onSave}){
-  const [f,sf]=useState({ref:'',ds:'',subj:'',to:'',toO:'',desc:''});
-  const [files,setFiles]=useState([]);
-  const set=(k,v)=>sf(x=>({...x,[k]:v}));
-  const sub=()=>{
-    if(!f.ds||!f.subj||!f.to){alert('Fill required fields.');return;}
-    const ref=f.ref.trim()||mkRef('Out',state.outC);
-    const first=files[0]||null;
-    onSave({
-      id:crypto.randomUUID(),ref,ds:f.ds,du:new Date().toISOString(),by:user.u,
-      from:'DE Battaramulla',to:f.to==='Others'?f.toO:f.to,
-      subj:f.subj,desc:f.desc,
-      fd:first?.fd,fn:first?.fn,ft:first?.ft,
-      attachments:files.length>0?files:[]
-    });
-    onClose();
-  };
-  return <div>
-    <div className="g2">
-      <div className="fg"><label className="flb">Reference No</label><input className="fi" value={f.ref} onChange={e=>set('ref',e.target.value)} placeholder={mkRef('Out',state.outC)}/></div>
-      <div className="fg"><label className="flb">Date Sent *</label><input type="date" className="fi" value={f.ds} onChange={e=>set('ds',e.target.value)}/></div>
-      <div className="fg"><label className="flb">From</label><input className="fi" value="DE Battaramulla" readOnly style={{background:'#f5f5f5',color:'#888'}}/></div>
-      <div className="fg"><label className="flb">To *</label>
-        <select className="fi" value={f.to} onChange={e=>set('to',e.target.value)}><option value="">-- Select --</option>{OUT_TO.map(o=><option key={o}>{o}</option>)}</select>
-        {f.to==='Others'&&<input className="fi" style={{marginTop:5}} placeholder="Specify…" value={f.toO} onChange={e=>set('toO',e.target.value)}/>}
-      </div>
-      <div className="fg" style={{gridColumn:'span 2'}}><label className="flb">Subject *</label><input className="fi" value={f.subj} onChange={e=>set('subj',e.target.value)}/></div>
-    </div>
-    <div className="fg"><label className="flb">Description</label><textarea className="fi" style={{height:65,resize:'vertical'}} value={f.desc} onChange={e=>set('desc',e.target.value)}/></div>
-    <div className="fg"><label className="flb">Attachments</label><MultiFileUploader files={files} onChange={setFiles}/></div>
-    <div className="fr" style={{justifyContent:'flex-end'}}>
-      <button className="btn bs" onClick={onClose}>Cancel</button>
-      <button className="btn bp" onClick={sub}>Upload Out Letter</button>
-    </div>
-  </div>;
-}
-
-// ─── IN MODAL ─────────────────────────────────────────────────────────────
-function InModal({letter,user,onClose,onUpdate,users}){
-  const ASSIGNABLE=users.filter(u=>u.u!=="DE");
-  const [note,setNote]=useState(letter.note||'');
-  const [editN,setEditN]=useState(false);
-  const [showA,setShowA]=useState(false);
-  const [newA,setNewA]=useState(letter.asgn.map(a=>a.u));
-  const [addFiles,setAddFiles]=useState([]);
-  const isDE=user.r==='DE';
-
-  useEffect(()=>{
-    const my=letter.asgn.find(a=>a.u===user.u);
-    if(my&&!my.seen){
-      const upd=letter.asgn.map(a=>a.u===user.u?{...a,seen:new Date().toISOString()}:a);
-      onUpdate(letter.id,{asgn:upd});
+function saveLS(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); return true; }
+  catch(e){
+    if(e.name==='QuotaExceededError'){
+      // Storage full — strip base64 file data from old letters
+      console.warn("Storage quota exceeded, stripping old file data");
     }
-  },[]);
+    return false;
+  }
+}
+function loadSession(){ return loadLS(LS_SESSION, null); }
+function saveSession(u){ u ? saveLS(LS_SESSION, u) : localStorage.removeItem(LS_SESSION); }
 
-  const updStatus=s=>{
-    const upd=letter.asgn.map(a=>a.u===user.u?{...a,s}:a);
-    const allD=upd.every(a=>a.s==='done');
-    const anyO=upd.some(a=>a.s==='ongoing');
-    let ns=letter.status;
-    if(!['pending_de'].includes(letter.status)){ns=allD?'done':anyO?'ongoing':'de_reviewed';}
-    onUpdate(letter.id,{asgn:upd,status:ns});
-  };
-  const saveNote=()=>{onUpdate(letter.id,{note});setEditN(false);};
-  const approve=()=>onUpdate(letter.id,{status:'de_reviewed',note,deAt:new Date().toISOString()});
-  const saveA=()=>{
-    const asgn=newA.map(u=>({u,d:users.find(x=>x.u===u)?.d||u,s:letter.asgn.find(a=>a.u===u)?.s||'pending',seen:letter.asgn.find(a=>a.u===u)?.seen||null}));
-    onUpdate(letter.id,{asgn});setShowA(false);
-  };
-  const saveMoreFiles=()=>{
-    if(addFiles.length===0)return;
-    const existing=letter.attachments||[];
-    onUpdate(letter.id,{attachments:[...existing,...addFiles]});
-    setAddFiles([]);
-  };
-  const my=letter.asgn.find(a=>a.u===user.u);
-  const canEdit=my&&letter.status!=='pending_de';
-  const attachments=letter.attachments&&letter.attachments.length>0
-    ?letter.attachments
-    :(letter.fd?[{fd:letter.fd,fn:letter.fn,ft:letter.ft}]:[]);
+// ═══════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+function makeRef(type, count){
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(2);
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `DEO_Batt_${yy}_${mm}_${dd}_${type}_${String(count).padStart(3,'0')}`;
+}
+function fmtDate(d){ return d ? new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—'; }
+function fmtDT(d){ return d ? new Date(d).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'; }
+function uid(){ return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)+Date.now().toString(36); }
 
-  return <Mod title={`📄 ${letter.ref}`} onClose={onClose}>
-    <div className="g2">
-      <Fld l="Reference No" v={letter.ref}/><Fld l="Date Received" v={fd(letter.dr)}/>
-      <Fld l="From" v={letter.from}/><Fld l="To" v={letter.to}/>
-      <Fld l="Uploaded By" v={letter.by}/><Fld l="Date Uploaded" v={fdt(letter.du)}/>
-      <Fld l="Status" v={<Bdg s={letter.status}/>}/>{letter.deAt&&<Fld l="DE Reviewed" v={fdt(letter.deAt)}/>}
+// ═══════════════════════════════════════════════════════════════════════════
+// REACTIVE STATE (simple pub-sub)
+// ═══════════════════════════════════════════════════════════════════════════
+let _state = {
+  user: loadSession(),
+  page: 'dash',
+  appState: loadLS(LS_STATE, EMPTY_STATE),
+  users: loadLS(LS_USERS, DEFAULT_USERS),
+  saving: false,
+  filterStatus: '',
+  toasts: [],
+  modals: [], // stack of modal configs
+};
+// Ensure defaults if loaded state is incomplete
+_state.appState = {...EMPTY_STATE, ..._state.appState};
+
+let _listeners = [];
+function subscribe(fn){ _listeners.push(fn); return ()=>{ _listeners = _listeners.filter(l=>l!==fn); }; }
+function getState(){ return _state; }
+function setState(patch){
+  _state = {..._state, ...patch};
+  _listeners.forEach(l=>l(_state));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+function saveAppState(newAS, msg='Saved.'){
+  setState({appState: newAS, saving: true});
+  const ok = saveLS(LS_STATE, newAS);
+  setTimeout(()=>setState({saving:false}), 400);
+  showToast(msg, ok ? 'ok' : 'err');
+  return ok;
+}
+
+function saveUsers(newUsers){
+  setState({users: newUsers});
+  saveLS(LS_USERS, newUsers);
+  showToast('User list saved.','ok');
+}
+
+function showToast(msg, type='ok'){
+  const id = uid();
+  setState({toasts:[..._state.toasts, {id, msg, type}]});
+  setTimeout(()=>{
+    setState({toasts: _state.toasts.filter(t=>t.id!==id)});
+  }, 3500);
+}
+
+function login(userObj){ setState({user:userObj, page:'dash'}); saveSession(userObj); showToast(`Welcome, ${userObj.d}`,'ok'); }
+function logout(){ setState({user:null, page:'dash', filterStatus:''}); saveSession(null); }
+
+function addInLetter(letter){
+  const as = _state.appState;
+  saveAppState({...as, inL:[...as.inL, letter], inC: as.inC+1}, 'Incoming letter saved.');
+}
+function updateInLetter(id, patch){
+  const as = _state.appState;
+  saveAppState({...as, inL: as.inL.map(l=>l.id===id?{...l,...patch}:l)}, 'Letter updated.');
+}
+function addOutLetter(letter){
+  const as = _state.appState;
+  saveAppState({...as, outL:[...as.outL, letter], outC: as.outC+1}, 'Outgoing letter saved.');
+}
+function deleteInLetter(id){
+  if(!confirm('Delete this letter? This cannot be undone.')) return;
+  const as = _state.appState;
+  saveAppState({...as, inL: as.inL.filter(l=>l.id!==id)}, 'Letter deleted.');
+}
+function deleteOutLetter(id){
+  if(!confirm('Delete this letter? This cannot be undone.')) return;
+  const as = _state.appState;
+  saveAppState({...as, outL: as.outL.filter(l=>l.id!==id)}, 'Letter deleted.');
+}
+
+function exportData(){
+  const data = {
+    exportedAt: new Date().toISOString(),
+    appState: _state.appState,
+    users: _state.users,
+  };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`LMS_Backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast('Backup downloaded. Upload it to Google Drive folder.','ok');
+}
+
+function importData(file){
+  const r = new FileReader();
+  r.onload = e => {
+    try{
+      const data = JSON.parse(e.target.result);
+      if(data.appState){ saveLS(LS_STATE, data.appState); setState({appState:{...EMPTY_STATE,...data.appState}}); }
+      if(data.users){ saveLS(LS_USERS, data.users); setState({users: data.users}); }
+      showToast('Data restored from backup.','ok');
+    }catch{ showToast('Invalid backup file.','err'); }
+  };
+  r.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RENDER ENGINE
+// ═══════════════════════════════════════════════════════════════════════════
+const app = document.getElementById('app');
+
+function render(){
+  const s = getState();
+  if(!s.user){ renderLogin(); return; }
+  renderApp();
+}
+
+subscribe(()=>{
+  const s = getState();
+  // Partial updates
+  renderToasts();
+  renderSaving();
+  // Full re-render only if page or auth changed — otherwise partial
+  const prev = app._lastPage;
+  if(!app._lastPage || prev !== (s.user?.u || '') + s.page){
+    app._lastPage = (s.user?.u || '') + s.page;
+    render();
+  } else {
+    renderPageContent();
+  }
+});
+
+// Initial render
+render();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LOGIN PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+function renderLogin(){
+  app.innerHTML = `
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0a1628 0%,#102040 50%,#1a3060 100%);display:flex;align-items:center;justify-content:center;padding:16px">
+    <div style="width:100%;max-width:420px">
+      <div style="text-align:center;margin-bottom:28px">
+        <div style="font-size:40px;margin-bottom:12px">🏛️</div>
+        <div style="color:#fff;font-weight:800;font-size:22px;letter-spacing:-.5px">DE Office – Battaramulla</div>
+        <div style="color:rgba(255,255,255,.45);font-size:13px;margin-top:4px">Letter Management System · Engineering Branch</div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="fg"><label class="lbl">Username</label><input class="inp" id="l-user" placeholder="e.g. DE, CC, MO1…" autofocus/></div>
+          <div class="fg"><label class="lbl">Password</label><input class="inp" id="l-pass" type="password" placeholder="Password"/></div>
+          <div id="l-err" style="display:none" class="alert alert-err" style="margin-bottom:12px"></div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px" onclick="doLogin()">Sign In →</button>
+        </div>
+      </div>
+      <div style="text-align:center;color:rgba(255,255,255,.2);font-size:11px;margin-top:16px">© 2026 DE Office, Battaramulla</div>
     </div>
-    <Fld l="Subject" v={letter.subj}/>
-    {letter.desc&&<Fld l="Description" v={letter.desc}/>}
-    <AttachmentsView attachments={attachments}/>
+  </div>`;
+  document.getElementById('l-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  document.getElementById('l-user').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('l-pass').focus(); });
+}
 
-    {isDE&&<div style={{marginTop:13}}>
-      <div style={{fontWeight:700,color:'#003580',fontSize:12,marginBottom:6}}>➕ Add More Attachments</div>
-      <MultiFileUploader files={addFiles} onChange={setAddFiles}/>
-      {addFiles.length>0&&<button className="btn bp bsm" style={{marginTop:7}} onClick={saveMoreFiles}>Save Attachments</button>}
-    </div>}
+function doLogin(){
+  const u = document.getElementById('l-user').value.trim();
+  const p = document.getElementById('l-pass').value;
+  const found = getState().users.find(x => x.u.toLowerCase()===u.toLowerCase());
+  const errEl = document.getElementById('l-err');
+  if(!found || found.pw !== p){
+    errEl.style.display='flex'; errEl.textContent='⚠ Invalid username or password.'; return;
+  }
+  login({u:found.u, d:found.d, r:found.r});
+}
 
-    {(isDE||letter.note)&&<div className="na">
-      <div style={{fontWeight:700,color:'#003580',marginBottom:7,fontSize:13}}>📝 DE Note / Instructions</div>
-      {isDE&&editN
-        ?<><textarea className="fi" style={{height:75}} value={note} onChange={e=>setNote(e.target.value)} placeholder="Instructions…"/>
-          <div className="fr" style={{marginTop:7}}>
-            <button className="btn bp bsm" onClick={saveNote}>Save</button>
-            <button className="btn bs bsm" onClick={()=>{setNote(letter.note||'');setEditN(false);}}>Cancel</button>
-          </div></>
-        :<><div style={{fontSize:13,color:'#333',whiteSpace:'pre-wrap',minHeight:22}}>{letter.note||<span style={{color:'#bbb'}}>No note.</span>}</div>
-          {isDE&&<button className="btn bp bsm" style={{marginTop:7}} onClick={()=>setEditN(true)}>✏️ Edit Note</button>}</>}
-    </div>}
+// ═══════════════════════════════════════════════════════════════════════════
+// APP SHELL
+// ═══════════════════════════════════════════════════════════════════════════
+function renderApp(){
+  const s = getState();
+  const {user} = s;
+  const canOut = !['STO','TO'].includes(user.r);
+  const isAdmin = ['DE','CC'].includes(user.r);
+  const isDE = user.r === 'DE';
 
-    {letter.asgn.length>0&&<div style={{marginTop:14}}>
-      <div style={{fontWeight:700,color:'#003580',marginBottom:7,fontSize:13}}>👥 Assigned Members</div>
-      {letter.asgn.map(a=><div key={a.u} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 11px',background:'#f9f9f9',border:'1px solid #eee',borderRadius:6,marginBottom:5}}>
+  app.innerHTML = `
+  <div id="saving-bar" style="display:none" class="saving-bar"></div>
+  <div class="topnav">
+    <div class="topnav-bar">
+      <div style="flex:1">
+        <div class="nav-logo">DE Office – Battaramulla &nbsp;·&nbsp; Letter Management</div>
+        <div class="nav-sub">Engineering Branch · Data saved in browser (export to Drive)</div>
+      </div>
+      <button class="btn btn-ghost notif-btn" style="border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.7)" onclick="toggleNotif()">
+        🔔 <span id="notif-dot" style="display:none" class="notif-dot">0</span>
+      </button>
+      <div class="nav-user" style="margin:0 4px">
+        <div class="nav-user-name">${escHtml(user.d)}</div>
+        <div class="nav-user-role">${user.r} · ${escHtml(user.u)}</div>
+      </div>
+      <button class="btn" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:12px" onclick="logout()">Logout</button>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab ${s.page==='dash'?'active':''}" onclick="setPage('dash')">🏠 Dashboard</button>
+      <button class="nav-tab ${s.page==='in'?'active':''}" onclick="setPage('in')">📥 In Letters</button>
+      ${canOut?`<button class="nav-tab ${s.page==='out'?'active':''}" onclick="setPage('out')">📤 Out Letters</button>`:''}
+      ${isAdmin?`<button class="nav-tab ${s.page==='rep'?'active':''}" onclick="setPage('rep')">📊 Reports</button>`:''}
+      ${isDE?`<button class="nav-tab ${s.page==='users'?'active':''}" onclick="setPage('users')">👤 Users</button>`:''}
+    </div>
+  </div>
+  <div class="page-wrap">
+    <div class="card">
+      <div class="card-body" id="page-content"></div>
+    </div>
+  </div>
+  <div class="toast-container" id="toast-container"></div>
+  <div id="modal-container"></div>
+  <div id="notif-panel" style="display:none;position:fixed;top:100px;right:16px;width:340px;background:#fff;border-radius:12px;box-shadow:var(--shadow2);border:1px solid var(--border2);z-index:200;max-height:400px;overflow-y:auto">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center">
+      <strong style="font-size:13px">Notifications</strong>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('notif-panel').style.display='none'">✕</button>
+    </div>
+    <div id="notif-list" style="padding:12px"></div>
+  </div>`;
+
+  renderPageContent();
+  renderToasts();
+  renderSaving();
+}
+
+function setPage(p){
+  setState({page:p, filterStatus:''});
+}
+
+window.setPage = setPage;
+window.logout = logout;
+window.doLogin = doLogin;
+
+function renderSaving(){
+  const bar = document.getElementById('saving-bar');
+  if(bar) bar.style.display = getState().saving ? 'block' : 'none';
+}
+
+function renderToasts(){
+  const tc = document.getElementById('toast-container');
+  if(!tc) return;
+  tc.innerHTML = getState().toasts.map(t=>`
+    <div class="toast ${t.type==='err'?'err':t.type==='ok'?'ok':''}">${escHtml(t.msg)}</div>
+  `).join('');
+}
+
+function toggleNotif(){
+  const p = document.getElementById('notif-panel');
+  if(!p) return;
+  p.style.display = p.style.display==='none' ? 'block' : 'none';
+  const {appState, user} = getState();
+  const mine = (appState.notifications||[]).filter(n=>n.to===user.u);
+  const notifList = document.getElementById('notif-list');
+  if(notifList){
+    notifList.innerHTML = mine.length===0
+      ? '<div style="color:var(--text3);text-align:center;padding:20px 0">No notifications.</div>'
+      : mine.map(n=>`<div style="padding:9px 0;border-bottom:1px solid var(--border2);font-size:13px"><strong style="color:var(--navy)">${escHtml(n.title)}</strong><div style="color:var(--text2);margin-top:2px">${escHtml(n.msg)}</div><div style="color:var(--text3);font-size:11px;margin-top:2px">${fmtDT(n.at)}</div></div>`).join('');
+  }
+}
+window.toggleNotif = toggleNotif;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PAGE CONTENT ROUTER
+// ═══════════════════════════════════════════════════════════════════════════
+function renderPageContent(){
+  const el = document.getElementById('page-content');
+  if(!el) return;
+  const s = getState();
+  const {page, user} = s;
+  if(!user) return;
+
+  const titles = {dash:'🏠 Dashboard', in:'📥 Incoming Letters', out:'📤 Outgoing Letters', rep:'📊 Reports', users:'👤 Manage Users'};
+  const canOut = !['STO','TO'].includes(user.r);
+
+  let content = '';
+  if(page==='dash')  content = renderDash();
+  else if(page==='in') content = renderInPage();
+  else if(page==='out' && canOut) content = renderOutPage();
+  else if(page==='rep' && ['DE','CC'].includes(user.r)) content = renderReports();
+  else if(page==='users' && user.r==='DE') content = renderUsersPage();
+  else content = `<div style="color:var(--text3);text-align:center;padding:40px">Access not available.</div>`;
+
+  el.innerHTML = `<h2 style="font-size:16px;font-weight:800;color:var(--navy);margin-bottom:20px">${titles[page]||''}</h2>${content}`;
+  attachPageEvents();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════════════════
+function renderDash(){
+  const {appState, user} = getState();
+  const {inL, outL} = appState;
+  const isAdmin = ['DE','CC'].includes(user.r);
+
+  if(isAdmin){
+    const tot = inL.length;
+    const pde = inL.filter(l=>l.status==='pending_de').length;
+    const ong = inL.filter(l=>l.status==='ongoing').length;
+    const done = inL.filter(l=>l.status==='done').length;
+    const reviewed = inL.filter(l=>l.status==='de_reviewed').length;
+    return `
+    <div class="stats-grid">
+      ${statCard('Total In', tot, '#1a56db', "setPage('in')")}
+      ${statCard('Pending Review', pde, '#e65100', "setPage('in');applyFilter('pending_de')")}
+      ${statCard('DE Reviewed', reviewed, '#1565c0', "setPage('in');applyFilter('de_reviewed')")}
+      ${statCard('Ongoing', ong, '#6a1b9a', "setPage('in');applyFilter('ongoing')")}
+      ${statCard('Completed', done, '#059669', "setPage('in');applyFilter('done')")}
+      ${statCard('Out Letters', outL.length, '#0369a1', "setPage('out')")}
+    </div>
+    ${pde>0?`<div class="alert alert-warn">⚡ <strong>${pde}</strong> letter${pde>1?'s':''} awaiting your review.</div>`:''}
+    <div class="alert alert-info">💾 Data is stored in your browser. Use <strong>Export Backup</strong> in Reports to save to Google Drive.</div>
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="exportData()">📥 Export Backup (JSON)</button>
+      <label class="btn btn-ghost btn-sm" style="cursor:pointer">📤 Import Backup <input type="file" accept=".json" style="display:none" onchange="importBackup(this)"></label>
+      <a href="${DRIVE_FOLDER}" target="_blank" class="btn btn-success btn-sm">📁 Open Google Drive Folder</a>
+    </div>`;
+  } else {
+    const my = inL.filter(l=>l.asgn.some(a=>a.u===user.u) && l.status!=='pending_de');
+    const myPend = my.filter(l=>l.asgn.find(a=>a.u===user.u)?.s==='pending');
+    const myOng  = my.filter(l=>l.asgn.find(a=>a.u===user.u)?.s==='ongoing');
+    const myDone = my.filter(l=>l.asgn.find(a=>a.u===user.u)?.s==='done');
+    return `
+    <div class="stats-grid">
+      ${statCard('Assigned to Me', my.length, '#1a56db', "setPage('in')")}
+      ${statCard('My Pending', myPend.length, '#dc2626')}
+      ${statCard('My Ongoing', myOng.length, '#6a1b9a')}
+      ${statCard('My Done', myDone.length, '#059669')}
+    </div>
+    <div class="alert alert-info">Welcome, <strong>${escHtml(user.d)}</strong>. Click "In Letters" to view your assigned letters.</div>`;
+  }
+}
+
+function statCard(label, val, color, onclick=''){
+  return `<div class="stat-card${onclick?' clickable':''}" ${onclick?`onclick="${onclick}"`:''}
+    style="border-left-color:${color}"
+    onmouseenter="this.style.borderLeftColor='${color}'" >
+    <div class="stat-val" style="color:${color}">${val}</div>
+    <div class="stat-lbl">${label}</div>
+    ${onclick?'<div style="font-size:10px;color:var(--text3);margin-top:3px">Click to view →</div>':''}
+  </div>`;
+}
+
+window.applyFilter = function(f){ setState({filterStatus:f}); };
+window.exportData = exportData;
+window.importBackup = function(input){ if(input.files[0]) importData(input.files[0]); };
+
+// ═══════════════════════════════════════════════════════════════════════════
+// IN LETTERS PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+function renderInPage(){
+  const {appState, user, filterStatus} = getState();
+  const isDE = user.r==='DE';
+  const isCC = user.r==='CC';
+  const isAdmin = isDE||isCC;
+  const canUpload = isAdmin; // DE and CC can upload
+  const isSTO_TO = ['STO','TO'].includes(user.r);
+
+  let letters = appState.inL;
+  if(isSTO_TO) letters = letters.filter(l=>l.asgn.some(a=>a.u===user.u) && l.status!=='pending_de');
+  else if(!isAdmin) letters = letters.filter(l=>l.asgn.some(a=>a.u===user.u));
+
+  return `
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;justify-content:space-between">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input class="inp" id="in-search" style="width:180px" placeholder="🔍 Search ref/subject/from…" value="" oninput="renderPageContent()"/>
+      <select class="inp" id="in-status" style="width:170px" onchange="renderPageContent()">
+        <option value="">All Status</option>
+        <option value="pending_de" ${filterStatus==='pending_de'?'selected':''}>Pending DE Review</option>
+        <option value="de_reviewed">DE Reviewed</option>
+        <option value="ongoing">Ongoing</option>
+        <option value="done">Done</option>
+      </select>
+      ${isAdmin?`<select class="inp" id="in-assignee" style="width:190px" onchange="renderPageContent()">
+        <option value="">All Assignees</option>
+        ${getState().users.filter(u=>u.u!=='DE').map(u=>`<option value="${escAttr(u.u)}">${escHtml(u.d)}</option>`).join('')}
+      </select>`:''}
+      <input type="date" class="inp" id="in-from" style="width:138px" onchange="renderPageContent()"/>
+      <input type="date" class="inp" id="in-to" style="width:138px" onchange="renderPageContent()"/>
+    </div>
+    ${canUpload?`<button class="btn btn-primary" onclick="openUploadIn()">+ Upload Letter</button>`:''}
+  </div>
+  ${buildInTable(letters, user, isAdmin, isDE)}`;
+}
+
+function buildInTable(allLetters, user, isAdmin, isDE){
+  // Apply filters from DOM
+  const search = (document.getElementById('in-search')?.value||'').toLowerCase();
+  const statusF = document.getElementById('in-status')?.value || getState().filterStatus || '';
+  const assigneeF = document.getElementById('in-assignee')?.value || '';
+  const fromDate = document.getElementById('in-from')?.value || '';
+  const toDate   = document.getElementById('in-to')?.value || '';
+
+  let ls = allLetters;
+  if(search) ls = ls.filter(l=>
+    l.ref.toLowerCase().includes(search) ||
+    l.subj.toLowerCase().includes(search) ||
+    l.from.toLowerCase().includes(search)
+  );
+  if(statusF) ls = ls.filter(l=>l.status===statusF);
+  if(assigneeF) ls = ls.filter(l=>l.asgn.some(a=>a.u===assigneeF));
+  if(fromDate) ls = ls.filter(l=>l.dr>=fromDate);
+  if(toDate)   ls = ls.filter(l=>l.dr<=toDate);
+
+  if(ls.length===0) return `<div style="text-align:center;color:var(--text3);padding:50px">No letters found.</div>`;
+
+  return `<div class="table-wrap">
+  <table>
+    <thead><tr>
+      <th>Ref No</th><th>Date</th><th>From</th><th>To</th><th>Subject</th>
+      <th>Files</th><th>Assignees</th>
+      ${isDE?'<th>Seen</th>':''}
+      <th>Status</th><th>Actions</th>
+    </tr></thead>
+    <tbody>
+    ${ls.map(l=>{
+      const fc = countFiles(l);
+      const allSeen = l.asgn.length>0 && l.asgn.every(a=>a.seen);
+      const noneSeen = l.asgn.length>0 && l.asgn.every(a=>!a.seen);
+      return `<tr onclick="openViewIn('${l.id}')">
+        <td><strong style="color:var(--navy);font-family:var(--mono);font-size:12px">${escHtml(l.ref)}</strong></td>
+        <td style="white-space:nowrap">${fmtDate(l.dr)}</td>
+        <td>${escHtml(l.from)}</td>
+        <td>${escHtml(l.to||'—')}</td>
+        <td style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.subj)}</td>
+        <td style="text-align:center">${fc>0?`<span style="background:#eff6ff;color:#1e40af;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700">📎 ${fc}</span>`:'—'}</td>
+        <td style="font-size:12px;max-width:180px">${l.asgn.length ? l.asgn.map(a=>`<span style="display:inline-block;background:var(--surface2);border-radius:4px;padding:1px 6px;font-size:11px;margin:1px">${escHtml(a.d)}</span>`).join('') : '—'}</td>
+        ${isDE?`<td>${l.asgn.length===0?'—':allSeen?'<span class="seen-yes">✓ All</span>':noneSeen?'<span class="seen-no">✗ None</span>':'<span style="color:#d97706;font-size:11px;font-weight:600">⚑ Partial</span>'}</td>`:''}
+        <td>${badge(l.status)}</td>
+        <td onclick="event.stopPropagation()">
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-primary btn-sm" onclick="openViewIn('${l.id}')">View</button>
+            ${isAdmin?`<button class="btn btn-ghost btn-sm" onclick="openEditIn('${l.id}')">Edit</button>`:''}
+            ${isAdmin?`<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:none" onclick="deleteInLetter('${l.id}')">Del</button>`:''}
+          </div>
+        </td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OUT LETTERS PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+function renderOutPage(){
+  const {appState, user} = getState();
+  const isAdmin = ['DE','CC'].includes(user.r);
+  const canUp = ['DE','CC','MO','DO'].includes(user.r);
+
+  let ls = appState.outL;
+  if(!isAdmin) ls = ls.filter(l=>l.by===user.u);
+
+  const search = (document.getElementById('out-search')?.value||'').toLowerCase();
+  const fromDate = document.getElementById('out-from')?.value||'';
+  const toDate   = document.getElementById('out-to')?.value||'';
+  if(search) ls=ls.filter(l=>l.ref.toLowerCase().includes(search)||l.subj.toLowerCase().includes(search));
+  if(fromDate) ls=ls.filter(l=>l.ds>=fromDate);
+  if(toDate)   ls=ls.filter(l=>l.ds<=toDate);
+
+  return `
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;justify-content:space-between">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input class="inp" id="out-search" style="width:200px" placeholder="🔍 Search…" oninput="renderPageContent()"/>
+      <input type="date" class="inp" id="out-from" style="width:138px" onchange="renderPageContent()"/>
+      <input type="date" class="inp" id="out-to" style="width:138px" onchange="renderPageContent()"/>
+    </div>
+    ${canUp?`<button class="btn btn-primary" onclick="openUploadOut()">+ Upload Out Letter</button>`:''}
+  </div>
+  ${ls.length===0?`<div style="text-align:center;color:var(--text3);padding:50px">No outgoing letters.</div>`:`
+  <div class="table-wrap"><table>
+    <thead><tr><th>Ref No</th><th>Date Sent</th><th>From</th><th>To</th><th>Subject</th><th>Files</th><th>By</th><th>Actions</th></tr></thead>
+    <tbody>
+    ${ls.map(l=>{
+      const fc = countFiles(l);
+      return `<tr onclick="openViewOut('${l.id}')">
+        <td><strong style="color:var(--navy);font-family:var(--mono);font-size:12px">${escHtml(l.ref)}</strong></td>
+        <td>${fmtDate(l.ds)}</td><td>${escHtml(l.from)}</td><td>${escHtml(l.to)}</td>
+        <td style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.subj)}</td>
+        <td style="text-align:center">${fc>0?`<span style="background:#eff6ff;color:#1e40af;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700">📎 ${fc}</span>`:'—'}</td>
+        <td>${escHtml(l.by)}</td>
+        <td onclick="event.stopPropagation()">
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-primary btn-sm" onclick="openViewOut('${l.id}')">View</button>
+            ${isAdmin?`<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:none" onclick="deleteOutLetter('${l.id}')">Del</button>`:''}
+          </div>
+        </td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table></div>`}`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// REPORTS
+// ═══════════════════════════════════════════════════════════════════════════
+function renderReports(){
+  const {appState, users} = getState();
+  const {inL, outL} = appState;
+  return `
+  <div class="stats-grid" style="margin-bottom:20px">
+    ${statCard('Total In', inL.length, '#1a56db')}
+    ${statCard('Pending DE', inL.filter(l=>l.status==='pending_de').length, '#e65100')}
+    ${statCard('Ongoing', inL.filter(l=>l.status==='ongoing').length, '#6a1b9a')}
+    ${statCard('Done', inL.filter(l=>l.status==='done').length, '#059669')}
+    ${statCard('Out Letters', outL.length, '#0369a1')}
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+    <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Print</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportData()">📥 Export Backup</button>
+    <a href="${DRIVE_FOLDER}" target="_blank" class="btn btn-success btn-sm">📁 Open Drive Folder</a>
+    <label class="btn btn-ghost btn-sm" style="cursor:pointer">📤 Import Backup <input type="file" accept=".json" style="display:none" onchange="importBackup(this)"></label>
+  </div>
+  <div style="font-weight:700;color:var(--navy);margin-bottom:10px;font-size:13px">${inL.length} incoming letter(s)</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Ref No</th><th>Date</th><th>From</th><th>Subject</th><th>Files</th><th>Assignees</th><th>Status</th><th>DE Note</th></tr></thead>
+    <tbody>
+    ${inL.map(l=>`<tr>
+      <td><strong style="font-family:var(--mono);font-size:12px">${escHtml(l.ref)}</strong></td>
+      <td>${fmtDate(l.dr)}</td><td>${escHtml(l.from)}</td>
+      <td>${escHtml(l.subj)}</td>
+      <td>${countFiles(l)>0?`📎 ${countFiles(l)}`:'—'}</td>
+      <td style="font-size:12px">${l.asgn.map(a=>`${escHtml(a.d)}: ${badge(a.s)} ${a.seen?'<span class="seen-yes">👁</span>':'<span class="seen-no">👁</span>'}`).join('<br>')}</td>
+      <td>${badge(l.status)}</td>
+      <td style="font-size:12px;color:var(--text2)">${escHtml(l.note||'—')}</td>
+    </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// USERS PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+function renderUsersPage(){
+  const {users, user} = getState();
+  const roleOrder = ['DE','CC','MO','DO','STO','TO'];
+  const roleNames = {DE:'Divisional Engineer',CC:'Chief Clerk',MO:'Management Officers',DO:'Development Officers',STO:'Sub-Technical Officers',TO:'Technical Officers'};
+  const roleColors = {DE:'#0a1628',CC:'#1e40af',MO:'#6a1b9a',DO:'#065f46',STO:'#92400e',TO:'#1e3a5f'};
+
+  return `
+  <div class="alert alert-info" style="margin-bottom:16px">
+    🔑 <strong>DE Only:</strong> Manage staff login credentials. Password changes take effect immediately.
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+    <button class="btn btn-success" onclick="openAddUser()">+ Add New User</button>
+  </div>
+  ${roleOrder.map(r=>{
+    const grp = users.filter(u=>u.r===r);
+    if(!grp.length) return '';
+    return `<div style="margin-bottom:22px">
+      <div style="font-weight:700;color:${roleColors[r]};font-size:13px;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid ${roleColors[r]}22">
+        ${roleNames[r]} <span style="color:var(--text3);font-weight:400;font-size:12px">(${grp.length})</span>
+      </div>
+      ${grp.map(u=>`<div class="user-card">
         <div>
-          <span style={{fontSize:13,fontWeight:600}}>{a.d}</span>
-          {isDE&&<span style={{marginLeft:9,fontSize:11,color:a.seen?'#27ae60':'#e74c3c',fontWeight:600}}>
-            {a.seen?`👁 Seen ${fdt(a.seen)}`:'👁 Not Seen'}
-          </span>}
+          <div style="font-weight:700;font-size:14px">${escHtml(u.d)}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:3px">
+            Username: <strong style="color:var(--navy)">${escHtml(u.u)}</strong>
+            &nbsp;·&nbsp; Role: <span style="background:${roleColors[r]}18;color:${roleColors[r]};border-radius:4px;padding:1px 7px;font-weight:700;font-size:11px">${u.r}</span>
+          </div>
         </div>
-        <div className="fr">
-          <Bdg s={a.s}/>
-          {a.u===user.u&&canEdit&&<select value={a.s} onChange={e=>updStatus(e.target.value)} style={{fontSize:12,padding:'3px 7px',borderRadius:4,border:'1px solid #ccc'}}>
-            <option value="pending">Pending</option>
-            <option value="attended">Attended</option>
-            <option value="ongoing">Ongoing</option>
-            <option value="done">Done</option>
-          </select>}
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="openEditUser('${escAttr(u.u)}')">✏ Edit</button>
+          ${u.u!==user.u?`<button class="btn btn-danger btn-sm" onclick="removeUser('${escAttr(u.u)}')">🗑</button>`:''}
         </div>
-      </div>)}
-    </div>}
+      </div>`).join('')}
+    </div>`;
+  }).join('')}`;
+}
 
-    {isDE&&<div style={{marginTop:14,display:'flex',gap:8,flexWrap:'wrap'}}>
-      <button className="btn bp bsm" onClick={()=>setShowA(true)}>👤 Manage Assignees</button>
-      {letter.status==='pending_de'&&<button className="btn bgreen" onClick={approve}>✅ Approve & DE Reviewed</button>}
-    </div>}
-    {isDE&&letter.status==='pending_de'&&<div className="ab aw" style={{marginTop:12}}><strong>⚡ Action Required:</strong> Review, add note, then Approve.</div>}
+window.removeUser = function(username){
+  if(!confirm(`Remove user ${username}?`)) return;
+  saveUsers(getState().users.filter(u=>u.u!==username));
+  renderPageContent();
+};
 
-    {showA&&<Mod title="Manage Assignees" onClose={()=>setShowA(false)}>
-      <div style={{display:'flex',flexWrap:'wrap'}}>
-        {ASSIGNABLE.map(a=><label key={a.u} className={`at${newA.includes(a.u)?' sel':''}`}>
-          <input type="checkbox" checked={newA.includes(a.u)} onChange={()=>setNewA(p=>p.includes(a.u)?p.filter(x=>x!==a.u):[...p,a.u])} style={{margin:0}}/> {a.d}
-        </label>)}
+// ═══════════════════════════════════════════════════════════════════════════
+// ATTACH PAGE EVENTS
+// ═══════════════════════════════════════════════════════════════════════════
+function attachPageEvents(){
+  // Nothing extra needed; all handlers are inline
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MODALS — UPLOAD IN LETTER
+// ═══════════════════════════════════════════════════════════════════════════
+window.openUploadIn = function(){
+  const {appState, user, users} = getState();
+  const assignable = users.filter(u=>u.u!=='DE');
+  const isDE = user.r==='DE';
+
+  showModal('📥 Upload Incoming Letter', `
+    <div class="g2">
+      <div class="fg"><label class="lbl">Reference No <span style="color:var(--text3)">(auto if blank)</span></label>
+        <input class="inp" id="ui-ref" placeholder="${makeRef('In', appState.inC)}"/>
       </div>
-      <div className="fr" style={{justifyContent:'flex-end',marginTop:13}}>
-        <button className="btn bs" onClick={()=>setShowA(false)}>Cancel</button>
-        <button className="btn bp" onClick={saveA}>Save</button>
+      <div class="fg"><label class="lbl">Date Received *</label>
+        <input type="date" class="inp" id="ui-date" value="${new Date().toISOString().slice(0,10)}"/>
       </div>
-    </Mod>}
-  </Mod>;
-}
-
-// ─── OUT MODAL ────────────────────────────────────────────────────────────
-function OutModal({letter,onClose}){
-  const attachments=letter.attachments&&letter.attachments.length>0
-    ?letter.attachments
-    :(letter.fd?[{fd:letter.fd,fn:letter.fn,ft:letter.ft}]:[]);
-  return <Mod title={`📤 ${letter.ref}`} onClose={onClose}>
-    <div className="g2">
-      <Fld l="Reference No" v={letter.ref}/><Fld l="Date Sent" v={fd(letter.ds)}/>
-      <Fld l="From" v={letter.from}/><Fld l="To" v={letter.to}/>
-      <Fld l="Uploaded By" v={letter.by}/><Fld l="Date Uploaded" v={fdt(letter.du)}/>
-    </div>
-    <Fld l="Subject" v={letter.subj}/>
-    {letter.desc&&<Fld l="Description" v={letter.desc}/>}
-    <AttachmentsView attachments={attachments}/>
-  </Mod>;
-}
-
-// ─── DASHBOARD ────────────────────────────────────────────────────────────
-function Dashboard({user,state,setPage,setFS}){
-  const {inL}=state;
-  const isDE=user.r==='DE',isCC=user.r==='CC',isAdmin=isDE||isCC;
-  const tot=inL.length,pde=inL.filter(l=>l.status==='pending_de').length,don=inL.filter(l=>l.status==='done').length,ong=inL.filter(l=>l.status==='ongoing').length;
-  const my=inL.filter(l=>l.asgn.some(a=>a.u===user.u));
-  const myP=my.filter(l=>l.asgn.find(a=>a.u===user.u)?.s==='pending');
-  const myO=my.filter(l=>l.asgn.find(a=>a.u===user.u)?.s==='ongoing');
-  const myD=my.filter(l=>l.asgn.find(a=>a.u===user.u)?.s==='done');
-  const unseen=isDE?inL.reduce((s,l)=>s+l.asgn.filter(a=>!a.seen).length,0):0;
-  const go=s=>{setFS(s);setPage('in');};
-  return <div>
-    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:13,marginBottom:22}}>
-      {isAdmin&&<>
-        <SCard label="Total In Letters" value={tot} color="#003580" onClick={()=>go('')}/>
-        <SCard label="Pending DE Review" value={pde} color="#e67e22" onClick={()=>go('pending_de')}/>
-        <SCard label="DE Approved" value={tot-pde} color="#2980b9" onClick={()=>go('de_reviewed')}/>
-        <SCard label="Ongoing" value={ong} color="#8e44ad" onClick={()=>go('ongoing')}/>
-        <SCard label="Completed" value={don} color="#27ae60" onClick={()=>go('done')}/>
-        <SCard label="Out Letters" value={state.outL.length} color="#16a085" onClick={()=>setPage('out')}/>
-      </>}
-      {!isAdmin&&<>
-        <SCard label="Assigned to Me" value={my.length} color="#003580" onClick={()=>go('')}/>
-        <SCard label="My Pending" value={myP.length} color="#c0392b"/>
-        <SCard label="My Ongoing" value={myO.length} color="#d35400"/>
-        <SCard label="My Done" value={myD.length} color="#27ae60"/>
-      </>}
-    </div>
-    {isDE&&unseen>0&&<div className="ab aw">👁 <strong>{unseen}</strong> assigned task{unseen>1?'s':''} not yet seen by assignees.</div>}
-    {isDE&&pde>0&&<div className="ab aw">⚡ <strong>{pde}</strong> letter{pde>1?'s':''} pending your review.</div>}
-    <div className="ab ai" style={{marginTop:10}}>✅ All data is saved permanently and will persist after refresh. Anyone assigned can access their letters anytime.</div>
-    <div style={{fontSize:13,color:'#666',fontStyle:'italic',marginTop:10}}>Welcome, <strong>{user.d}</strong>. Click any card to filter.</div>
-  </div>;
-}
-
-// ─── IN PAGE ──────────────────────────────────────────────────────────────
-function InPage({user,state,onAdd,onUpd,fs,setFS,users}){
-  const [sel,setSel]=useState(null);
-  const [showUp,setShowUp]=useState(false);
-  const [srch,setSrch]=useState('');
-  const [sf,setSf]=useState(fs||'');
-  const [pf,setPf]=useState('');
-  const [df,setDf]=useState('');const [dt,setDt]=useState('');
-  const ASSIGNABLE=users.filter(u=>u.u!=="DE");
-  useEffect(()=>{if(fs!==undefined){setSf(fs);setFS(undefined);}},[fs]);
-  const isDE=user.r==='DE',isCC=user.r==='CC',isAdmin=isDE||isCC,isST=['STO','TO'].includes(user.r);
-  let ls=state.inL;
-  if(isST) ls=ls.filter(l=>l.asgn.some(a=>a.u===user.u)&&l.status!=='pending_de');
-  else if(!isAdmin) ls=ls.filter(l=>l.asgn.some(a=>a.u===user.u));
-  if(srch) ls=ls.filter(l=>l.ref.toLowerCase().includes(srch.toLowerCase())||l.subj.toLowerCase().includes(srch.toLowerCase())||l.from.toLowerCase().includes(srch.toLowerCase()));
-  if(sf) ls=ls.filter(l=>l.status===sf);
-  if(isAdmin&&pf) ls=ls.filter(l=>l.asgn.some(a=>a.u===pf));
-  if(df) ls=ls.filter(l=>l.dr>=df);
-  if(dt) ls=ls.filter(l=>l.dr<=dt);
-  return <div>
-    <div className="fr" style={{justifyContent:'space-between',marginBottom:13,flexWrap:'wrap',gap:7}}>
-      <div className="fr">
-        <input className="fi" style={{width:170}} placeholder="🔍 Search…" value={srch} onChange={e=>setSrch(e.target.value)}/>
-        <select className="fi" style={{width:155}} value={sf} onChange={e=>setSf(e.target.value)}>
-          <option value="">All Status</option>
-          <option value="pending_de">Pending DE Review</option>
-          <option value="de_reviewed">DE Reviewed</option>
-          <option value="ongoing">Ongoing</option>
-          <option value="done">Done</option>
+      <div class="fg"><label class="lbl">From *</label>
+        <select class="inp" id="ui-from" onchange="toggleOther('ui-fromO','ui-from')">
+          <option value="">— Select —</option>
+          ${FROM_OPTS.map(o=>`<option>${escHtml(o)}</option>`).join('')}
         </select>
-        {isAdmin&&<select className="fi" style={{width:170}} value={pf} onChange={e=>setPf(e.target.value)}>
-          <option value="">All Assignees</option>
-          {ASSIGNABLE.map(a=><option key={a.u} value={a.u}>{a.d}</option>)}
-        </select>}
-        <input type="date" className="fi" style={{width:132}} value={df} onChange={e=>setDf(e.target.value)}/>
-        <input type="date" className="fi" style={{width:132}} value={dt} onChange={e=>setDt(e.target.value)}/>
+        <input class="inp" id="ui-fromO" style="display:none;margin-top:6px" placeholder="Specify…"/>
       </div>
-      {isAdmin&&<button className="btn bp" onClick={()=>setShowUp(true)}>+ Upload In Letter</button>}
-    </div>
-    {ls.length===0?<div style={{textAlign:'center',color:'#aaa',padding:50}}>No letters found.</div>:
-    <div className="tw"><table>
-      <thead><tr><th>Ref No</th><th>Date</th><th>From</th><th>To</th><th>Subject</th><th>Files</th><th>Assignees</th>{isDE&&<th>Seen?</th>}<th>Status</th><th></th></tr></thead>
-      <tbody>{ls.map(l=>{
-        const allS=l.asgn.length>0&&l.asgn.every(a=>a.seen);
-        const noneS=l.asgn.length>0&&l.asgn.every(a=>!a.seen);
-        const fileCount=(l.attachments||[]).length||(l.fd?1:0);
-        return <tr key={l.id} onClick={()=>setSel(l)} style={{cursor:'pointer'}}>
-          <td><strong style={{color:'#003580'}}>{l.ref}</strong></td>
-          <td>{fd(l.dr)}</td><td>{l.from}</td><td>{l.to}</td><td>{l.subj}</td>
-          <td style={{textAlign:'center'}}>{fileCount>0?<span style={{background:'#e8f0fd',color:'#003580',borderRadius:10,padding:'2px 7px',fontSize:11,fontWeight:700}}>📎 {fileCount}</span>:'-'}</td>
-          <td style={{fontSize:12}}>{l.asgn.map(a=>a.d).join(', ')||'-'}</td>
-          {isDE&&<td>{l.asgn.length===0?'-':allS?<span style={{color:'#27ae60',fontSize:12,fontWeight:600}}>✅ All</span>:noneS?<span style={{color:'#e74c3c',fontSize:12,fontWeight:600}}>❌ None</span>:<span style={{color:'#e67e22',fontSize:12,fontWeight:600}}>⚠️ Partial</span>}</td>}
-          <td><Bdg s={l.status}/></td>
-          <td><button className="btn bp bsm" onClick={e=>{e.stopPropagation();setSel(l);}}>View</button></td>
-        </tr>;
-      })}</tbody>
-    </table></div>}
-    {sel&&<InModal letter={state.inL.find(l=>l.id===sel.id)||sel} user={user} onClose={()=>setSel(null)} onUpdate={(id,p)=>{onUpd(id,p);}} users={users}/>}
-    {showUp&&<Mod title="Upload Incoming Letter" onClose={()=>setShowUp(false)}><UpInForm user={user} onClose={()=>setShowUp(false)} state={state} onSave={l=>{onAdd(l);setShowUp(false);}} users={users}/></Mod>}
-  </div>;
-}
-
-// ─── OUT PAGE ─────────────────────────────────────────────────────────────
-function OutPage({user,state,onAdd}){
-  const [sel,setSel]=useState(null);const [showUp,setShowUp]=useState(false);
-  const [srch,setSrch]=useState('');const [df,setDf]=useState('');const [dt,setDt]=useState('');
-  const isAdmin=['DE','CC'].includes(user.r);
-  let ls=state.outL;
-  if(!isAdmin) ls=ls.filter(l=>l.by===user.u);
-  if(srch) ls=ls.filter(l=>l.ref.toLowerCase().includes(srch.toLowerCase())||l.subj.toLowerCase().includes(srch.toLowerCase()));
-  if(df) ls=ls.filter(l=>l.ds>=df);if(dt) ls=ls.filter(l=>l.ds<=dt);
-  const canUp=['DE','CC','MO','DO'].includes(user.r);
-  return <div>
-    <div className="fr" style={{justifyContent:'space-between',marginBottom:13}}>
-      <div className="fr">
-        <input className="fi" style={{width:200}} placeholder="🔍 Search…" value={srch} onChange={e=>setSrch(e.target.value)}/>
-        <input type="date" className="fi" style={{width:132}} value={df} onChange={e=>setDf(e.target.value)}/>
-        <input type="date" className="fi" style={{width:132}} value={dt} onChange={e=>setDt(e.target.value)}/>
+      <div class="fg"><label class="lbl">To</label>
+        <select class="inp" id="ui-to" onchange="toggleOther('ui-toO','ui-to')">
+          <option value="">— Select —</option>
+          ${TO_IN_OPTS.map(o=>`<option>${escHtml(o)}</option>`).join('')}
+        </select>
+        <input class="inp" id="ui-toO" style="display:none;margin-top:6px" placeholder="Specify…"/>
       </div>
-      {canUp&&<button className="btn bp" onClick={()=>setShowUp(true)}>+ Upload Out Letter</button>}
+      <div class="fg span2"><label class="lbl">Subject *</label>
+        <input class="inp" id="ui-subj" placeholder="Letter subject…"/>
+      </div>
     </div>
-    {ls.length===0?<div style={{textAlign:'center',color:'#aaa',padding:50}}>No outgoing letters.</div>:
-    <div className="tw"><table>
-      <thead><tr><th>Ref No</th><th>Date Sent</th><th>From</th><th>To</th><th>Subject</th><th>Files</th><th>By</th><th></th></tr></thead>
-      <tbody>{ls.map(l=>{
-        const fileCount=(l.attachments||[]).length||(l.fd?1:0);
-        return <tr key={l.id} onClick={()=>setSel(l)} style={{cursor:'pointer'}}>
-          <td><strong style={{color:'#003580'}}>{l.ref}</strong></td>
-          <td>{fd(l.ds)}</td><td>{l.from}</td><td>{l.to}</td><td>{l.subj}</td>
-          <td style={{textAlign:'center'}}>{fileCount>0?<span style={{background:'#e8f0fd',color:'#003580',borderRadius:10,padding:'2px 7px',fontSize:11,fontWeight:700}}>📎 {fileCount}</span>:'-'}</td>
-          <td>{l.by}</td>
-          <td><button className="btn bp bsm" onClick={e=>{e.stopPropagation();setSel(l);}}>View</button></td>
-        </tr>;
-      })}</tbody>
-    </table></div>}
-    {sel&&<OutModal letter={sel} onClose={()=>setSel(null)}/>}
-    {showUp&&<Mod title="Upload Outgoing Letter" onClose={()=>setShowUp(false)}><UpOutForm user={user} onClose={()=>setShowUp(false)} state={state} onSave={l=>{onAdd(l);setShowUp(false);}}/></Mod>}
-  </div>;
-}
-
-// ─── REPORTS ──────────────────────────────────────────────────────────────
-function RepPage({state,users}){
-  const ASSIGNABLE=users.filter(u=>u.u!=="DE");
-  const [pf,setPf]=useState('');const [sf,setSf]=useState('');const [df,setDf]=useState('');const [dt,setDt]=useState('');
-  const {inL,outL}=state;
-  let ls=inL;
-  if(pf) ls=ls.filter(l=>l.asgn.some(a=>a.u===pf));
-  if(sf) ls=ls.filter(l=>l.status===sf);
-  if(df) ls=ls.filter(l=>l.dr>=df);if(dt) ls=ls.filter(l=>l.dr<=dt);
-  return <div>
-    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))',gap:11,marginBottom:20}}>
-      <SCard label="Total In" value={inL.length} color="#003580"/>
-      <SCard label="Pending DE" value={inL.filter(l=>l.status==='pending_de').length} color="#e67e22"/>
-      <SCard label="Ongoing" value={inL.filter(l=>l.status==='ongoing').length} color="#8e44ad"/>
-      <SCard label="Done" value={inL.filter(l=>l.status==='done').length} color="#27ae60"/>
-      <SCard label="Out Letters" value={outL.length} color="#16a085"/>
+    <div class="fg"><label class="lbl">Description</label>
+      <textarea class="inp" id="ui-desc" style="height:70px;resize:vertical"></textarea>
     </div>
-    <div className="fr" style={{marginBottom:13,flexWrap:'wrap'}}>
-      <select className="fi" style={{width:190}} value={pf} onChange={e=>setPf(e.target.value)}><option value="">All Assignees</option>{ASSIGNABLE.map(a=><option key={a.u} value={a.u}>{a.d}</option>)}</select>
-      <select className="fi" style={{width:155}} value={sf} onChange={e=>setSf(e.target.value)}><option value="">All Status</option><option value="pending_de">Pending DE</option><option value="de_reviewed">DE Reviewed</option><option value="ongoing">Ongoing</option><option value="done">Done</option></select>
-      <input type="date" className="fi" style={{width:132}} value={df} onChange={e=>setDf(e.target.value)}/>
-      <input type="date" className="fi" style={{width:132}} value={dt} onChange={e=>setDt(e.target.value)}/>
-      <button className="btn bp bsm" onClick={()=>window.print()}>🖨 Print</button>
-      <a href={DRIVE} target="_blank" rel="noopener noreferrer" style={{padding:'5px 13px',background:'#34a853',color:'#fff',borderRadius:6,fontSize:12,fontWeight:600,textDecoration:'none'}}>📁 Drive</a>
+    <div class="fg">
+      <label class="lbl">Attachments</label>
+      ${fileUploaderHTML('ui-files')}
+      <div class="drive-hint">
+        💡 <strong>Tip:</strong> For large files, upload to
+        <a href="${DRIVE_FOLDER}" target="_blank">Google Drive folder</a> and paste the link below.
+      </div>
+      <input class="inp" id="ui-drivelink" style="margin-top:6px" placeholder="Optional: Paste Google Drive file link…"/>
     </div>
-    <div style={{fontSize:13,fontWeight:700,color:'#003580',marginBottom:7}}>{ls.length} letter{ls.length!==1?'s':''}</div>
-    <div className="tw"><table>
-      <thead><tr><th>Ref No</th><th>Date</th><th>From</th><th>Subject</th><th>Files</th><th>Assignees & Seen</th><th>Status</th><th>DE Note</th></tr></thead>
-      <tbody>{ls.map(l=>{
-        const fileCount=(l.attachments||[]).length||(l.fd?1:0);
-        return <tr key={l.id}>
-          <td><strong>{l.ref}</strong></td><td>{fd(l.dr)}</td><td>{l.from}</td><td>{l.subj}</td>
-          <td style={{textAlign:'center'}}>{fileCount>0?`📎 ${fileCount}`:'-'}</td>
-          <td style={{fontSize:11}}>{l.asgn.map(a=><div key={a.u} style={{marginBottom:2}}>{a.d}: <Bdg s={a.s}/> <span style={{color:a.seen?'#27ae60':'#e74c3c',fontWeight:600,fontSize:11}}>{a.seen?'👁 Seen':'👁 Unseen'}</span></div>)}</td>
-          <td><Bdg s={l.status}/></td>
-          <td style={{fontSize:12,color:'#555'}}>{l.note||'-'}</td>
-        </tr>;
-      })}</tbody>
-    </table></div>
-  </div>;
-}
+    ${isDE?`<div class="fg">
+      <label class="lbl">Assign To</label>
+      <div style="display:flex;flex-wrap:wrap;margin-top:4px">
+        ${assignable.map(a=>`<label class="assign-tag" id="at-${escAttr(a.u)}" onclick="toggleAssign('${escAttr(a.u)}')">
+          <input type="checkbox" style="display:none" id="ck-${escAttr(a.u)}"> ${escHtml(a.d)}
+        </label>`).join('')}
+      </div>
+    </div>`:''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitUploadIn()">Upload Letter</button>
+    </div>
+  `);
+};
 
-// ─── USER MANAGEMENT PAGE (DE only) ───────────────────────────────────────
-function UsersPage({users,onSaveUsers,currentUser}){
-  const [editUser,setEditUser]=useState(null);
-  const [newPw,setNewPw]=useState('');
-  const [newPw2,setNewPw2]=useState('');
-  const [newDName,setNewDName]=useState('');
-  const [err,setErr]=useState('');
-  const [ok,setOk]=useState('');
-  const [showAdd,setShowAdd]=useState(false);
-  const [newU,setNewU]=useState({u:'',d:'',r:'MO',pw:''});
+window.toggleOther = function(otherId, selId){
+  const sel = document.getElementById(selId);
+  const oth = document.getElementById(otherId);
+  if(sel && oth) oth.style.display = sel.value==='Others' ? 'block' : 'none';
+};
 
-  const openEdit=u=>{setEditUser(u);setNewPw('');setNewPw2('');setNewDName(u.d);setErr('');setOk('');};
-  const saveEdit=()=>{
-    if(!newDName.trim()){setErr('Display name required.');return;}
-    if(newPw&&newPw.length<4){setErr('Password must be at least 4 characters.');return;}
-    if(newPw&&newPw!==newPw2){setErr('Passwords do not match.');return;}
-    const updated=users.map(u=>u.u===editUser.u?{...u,d:newDName.trim(),...(newPw?{pw:newPw}:{})}:u);
-    onSaveUsers(updated);
-    setOk('User updated successfully.');
-    setErr('');
-    setTimeout(()=>{setEditUser(null);setOk('');},1200);
-  };
-  const addUser=()=>{
-    if(!newU.u.trim()||!newU.d.trim()||!newU.pw.trim()){alert('Fill all fields.');return;}
-    if(users.find(u=>u.u.toLowerCase()===newU.u.trim().toLowerCase())){alert('Username already exists.');return;}
-    const updated=[...users,{u:newU.u.trim().toUpperCase(),d:newU.d.trim(),r:newU.r,pw:newU.pw}];
-    onSaveUsers(updated);
-    setShowAdd(false);
-    setNewU({u:'',d:'',r:'MO',pw:''});
-  };
-  const removeUser=u=>{
-    if(u.u===currentUser.u){alert('Cannot remove yourself.');return;}
-    if(!window.confirm(`Remove user ${u.d}? This cannot be undone.`))return;
-    onSaveUsers(users.filter(x=>x.u!==u.u));
+window.toggleAssign = function(u){
+  const tag = document.getElementById('at-'+u);
+  const ck  = document.getElementById('ck-'+u);
+  if(!tag||!ck) return;
+  ck.checked = !ck.checked;
+  tag.classList.toggle('sel', ck.checked);
+};
+
+window.submitUploadIn = function(){
+  const {appState, user, users} = getState();
+  const ref  = document.getElementById('ui-ref')?.value.trim() || makeRef('In', appState.inC);
+  const date = document.getElementById('ui-date')?.value;
+  const fromSel = document.getElementById('ui-from')?.value;
+  const fromO   = document.getElementById('ui-fromO')?.value.trim();
+  const toSel   = document.getElementById('ui-to')?.value;
+  const toO     = document.getElementById('ui-toO')?.value.trim();
+  const subj    = document.getElementById('ui-subj')?.value.trim();
+  const desc    = document.getElementById('ui-desc')?.value.trim();
+  const driveLink = document.getElementById('ui-drivelink')?.value.trim();
+
+  if(!date||!fromSel||!subj){ showToast('Fill required: Date, From, Subject','err'); return; }
+
+  const from = fromSel==='Others' ? fromO : fromSel;
+  const to   = toSel==='Others' ? toO : toSel;
+
+  // Assigned users
+  const asgn = users.filter(u=>u.u!=='DE').filter(u=>{
+    const ck = document.getElementById('ck-'+u.u);
+    return ck && ck.checked;
+  }).map(u=>({u:u.u, d:u.d, s:'pending', seen:null}));
+
+  // Files
+  const files = window._uploadFiles?.['ui-files'] || [];
+  const attachments = [...files];
+  if(driveLink){ attachments.push({fn:'Drive Link', driveUrl:driveLink, isDriveLink:true}); }
+
+  const letter = {
+    id: uid(), ref, dr:date, du:new Date().toISOString(), by:user.u,
+    from, to: to||'DE', subj, desc, attachments,
+    asgn, status: user.r==='DE' ? 'de_reviewed' : 'pending_de',
+    note:'', deAt: user.r==='DE' ? new Date().toISOString() : null
   };
 
-  const roleGroups=[
-    {r:'DE',label:'Divisional Engineer'},
-    {r:'CC',label:'Chief Clerk'},
-    {r:'MO',label:'Management Officers'},
-    {r:'DO',label:'Development Officers'},
-    {r:'STO',label:'Sub-Technical Officers'},
-    {r:'TO',label:'Technical Officers'},
-  ];
+  addInLetter(letter);
+  closeModal();
+};
 
-  return <div>
-    <div className="ab ai" style={{marginBottom:16}}>
-      🔑 <strong>DE Only:</strong> Manage login credentials for all staff. Changes take effect immediately. Staff must use their updated password on next login.
+// ═══════════════════════════════════════════════════════════════════════════
+// VIEW IN LETTER MODAL
+// ═══════════════════════════════════════════════════════════════════════════
+window.openViewIn = function(id){
+  const {appState, user, users} = getState();
+  const l = appState.inL.find(x=>x.id===id);
+  if(!l) return;
+
+  // Mark seen
+  const isDE=user.r==='DE', isCC=user.r==='CC', isAdmin=isDE||isCC;
+  const myAssign = l.asgn.find(a=>a.u===user.u);
+  if(myAssign && !myAssign.seen){
+    updateInLetter(id, {asgn: l.asgn.map(a=>a.u===user.u?{...a,seen:new Date().toISOString()}:a)});
+  }
+
+  const canEdit = isAdmin || (myAssign && l.status!=='pending_de');
+  const assignable = users.filter(u=>u.u!=='DE');
+
+  showModal(`📄 ${l.ref}`, `
+    <div class="g2">
+      <div><div class="lbl">Reference No</div><div style="font-family:var(--mono);font-size:13px;font-weight:600">${escHtml(l.ref)}</div></div>
+      <div><div class="lbl">Date Received</div><div>${fmtDate(l.dr)}</div></div>
+      <div><div class="lbl">From</div><div>${escHtml(l.from)}</div></div>
+      <div><div class="lbl">To</div><div>${escHtml(l.to||'—')}</div></div>
+      <div><div class="lbl">Uploaded By</div><div>${escHtml(l.by)}</div></div>
+      <div><div class="lbl">Date Uploaded</div><div>${fmtDT(l.du)}</div></div>
+      <div><div class="lbl">Status</div><div>${badge(l.status)}</div></div>
+      ${l.deAt?`<div><div class="lbl">DE Reviewed</div><div>${fmtDT(l.deAt)}</div></div>`:'<div></div>'}
     </div>
-    <div style={{display:'flex',justifyContent:'flex-end',marginBottom:14}}>
-      <button className="btn bgreen" onClick={()=>setShowAdd(true)}>+ Add New User</button>
+    <div style="margin-bottom:12px"><div class="lbl">Subject</div><div style="font-weight:600">${escHtml(l.subj)}</div></div>
+    ${l.desc?`<div style="margin-bottom:12px"><div class="lbl">Description</div><div style="color:var(--text2)">${escHtml(l.desc)}</div></div>`:''}
+
+    ${buildAttachmentsView(l.attachments)}
+
+    <!-- DE NOTE -->
+    <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:var(--r);padding:14px;margin:14px 0">
+      <div style="font-weight:700;color:var(--navy);font-size:13px;margin-bottom:8px">📝 DE Instructions / Note</div>
+      <div id="vi-note-view" style="${isDE?'':''}">
+        <div style="font-size:13px;color:var(--text);white-space:pre-wrap;min-height:20px">${escHtml(l.note||'')|| '<span style="color:var(--text3)">No note added yet.</span>'}</div>
+        ${isDE?`<button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="editNote('${id}')">✏ Edit Note</button>`:''}
+      </div>
     </div>
-    {roleGroups.map(({r,label})=>{
-      const grp=users.filter(u=>u.r===r);
-      if(!grp.length)return null;
-      return <div key={r} style={{marginBottom:20}}>
-        <div style={{fontWeight:700,color:ROLE_COLORS[r]||'#003580',fontSize:13,marginBottom:8,paddingBottom:4,borderBottom:`2px solid ${ROLE_COLORS[r]||'#003580'}20`}}>
-          {label} <span style={{fontSize:11,color:'#999',fontWeight:400}}>({grp.length})</span>
+
+    <!-- ASSIGNEES -->
+    ${l.asgn.length>0?`
+    <div style="margin-bottom:14px">
+      <div style="font-weight:700;color:var(--navy);font-size:13px;margin-bottom:8px">👥 Assigned Members</div>
+      ${l.asgn.map(a=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 13px;background:#f8fafc;border:1px solid var(--border2);border-radius:var(--r);margin-bottom:6px">
+        <div>
+          <span style="font-weight:600;font-size:13px">${escHtml(a.d)}</span>
+          ${isDE?`<span style="margin-left:10px;font-size:11px">${a.seen?`<span class="seen-yes">👁 Seen ${fmtDT(a.seen)}</span>`:'<span class="seen-no">👁 Not Seen</span>'}</span>`:''}
         </div>
-        {grp.map(u=><div key={u.u} className="user-card">
-          <div>
-            <div style={{fontWeight:700,fontSize:14,color:'#1a1a2e'}}>{u.d}</div>
-            <div style={{fontSize:12,color:'#888',marginTop:2}}>
-              Username: <strong style={{color:'#003580'}}>{u.u}</strong>
-              &nbsp;&nbsp;·&nbsp;&nbsp;
-              Password: <span style={{letterSpacing:2}}>{'•'.repeat(Math.min(u.pw?.length||4,8))}</span>
-              &nbsp;&nbsp;·&nbsp;&nbsp;
-              <span className="role-badge">{u.r}</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          ${badge(a.s)}
+          ${a.u===user.u && canEdit ?`<select style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border)" onchange="updateMyStatus('${id}','${a.u}',this.value)">
+            <option value="pending" ${a.s==='pending'?'selected':''}>Pending</option>
+            <option value="attended" ${a.s==='attended'?'selected':''}>Attended</option>
+            <option value="ongoing" ${a.s==='ongoing'?'selected':''}>Ongoing</option>
+            <option value="done" ${a.s==='done'?'selected':''}>Done</option>
+          </select>`:''}
+        </div>
+      </div>`).join('')}
+    </div>`:''}
+
+    <!-- DE ACTIONS -->
+    ${isDE?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      ${l.status==='pending_de'?`<button class="btn btn-success" onclick="approveDE('${id}')">✅ Approve — Mark DE Reviewed</button>`:''}
+      <button class="btn btn-ghost btn-sm" onclick="openManageAssign('${id}')">👤 Manage Assignees</button>
+      <button class="btn btn-ghost btn-sm" onclick="openAddFilesModal('${id}')">📎 Add More Files</button>
+    </div>`:''}
+    ${isCC?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn btn-ghost btn-sm" onclick="openAddFilesModal('${id}')">📎 Add More Files</button>
+    </div>`:''}
+    ${isDE&&l.status==='pending_de'?`<div class="alert alert-warn">⚡ Action Required: Review this letter, add a note, then click Approve.</div>`:''}
+
+    <div style="display:flex;justify-content:flex-end;margin-top:6px">
+      <button class="btn btn-ghost" onclick="closeModal()">Close</button>
+    </div>
+  `, '860px');
+};
+
+window.updateMyStatus = function(letterId, assigneeU, newStatus){
+  const {appState} = getState();
+  const l = appState.inL.find(x=>x.id===letterId);
+  if(!l) return;
+  const newAsgn = l.asgn.map(a=>a.u===assigneeU?{...a,s:newStatus}:a);
+  const allDone = newAsgn.every(a=>a.s==='done');
+  const anyOngoing = newAsgn.some(a=>a.s==='ongoing');
+  let newStatus2 = l.status;
+  if(!['pending_de'].includes(l.status)){
+    newStatus2 = allDone ? 'done' : anyOngoing ? 'ongoing' : 'de_reviewed';
+  }
+  updateInLetter(letterId, {asgn:newAsgn, status:newStatus2});
+};
+
+window.approveDE = function(id){
+  updateInLetter(id, {status:'de_reviewed', deAt:new Date().toISOString()});
+  showToast('Approved — marked as DE Reviewed.','ok');
+  closeModal();
+};
+
+window.editNote = function(id){
+  const {appState} = getState();
+  const l = appState.inL.find(x=>x.id===id);
+  if(!l) return;
+  const noteDiv = document.getElementById('vi-note-view');
+  if(!noteDiv) return;
+  noteDiv.innerHTML = `
+    <textarea class="inp" id="vi-note-ta" style="height:80px;resize:vertical">${escHtml(l.note||'')}</textarea>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-primary btn-sm" onclick="saveNote('${id}')">Save Note</button>
+      <button class="btn btn-ghost btn-sm" onclick="openViewIn('${id}')">Cancel</button>
+    </div>`;
+};
+
+window.saveNote = function(id){
+  const ta = document.getElementById('vi-note-ta');
+  if(!ta) return;
+  updateInLetter(id, {note: ta.value.trim()});
+  showToast('Note saved.','ok');
+  openViewIn(id);
+};
+
+window.openManageAssign = function(id){
+  const {appState, users} = getState();
+  const l = appState.inL.find(x=>x.id===id);
+  if(!l) return;
+  const assignable = users.filter(u=>u.u!=='DE');
+  showModal('👤 Manage Assignees', `
+    <div style="display:flex;flex-wrap:wrap">
+      ${assignable.map(a=>{
+        const isAssigned = l.asgn.some(x=>x.u===a.u);
+        return `<label class="assign-tag ${isAssigned?'sel':''}" id="ma-${escAttr(a.u)}" onclick="toggleMA('${escAttr(a.u)}')">
+          <input type="checkbox" style="display:none" id="mack-${escAttr(a.u)}" ${isAssigned?'checked':''}>${escHtml(a.d)}
+        </label>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAssign('${id}')">Save</button>
+    </div>
+  `);
+};
+
+window.toggleMA = function(u){
+  const tag = document.getElementById('ma-'+u);
+  const ck  = document.getElementById('mack-'+u);
+  if(!tag||!ck) return;
+  ck.checked = !ck.checked;
+  tag.classList.toggle('sel', ck.checked);
+};
+
+window.saveAssign = function(id){
+  const {appState, users} = getState();
+  const l = appState.inL.find(x=>x.id===id);
+  const assignable = users.filter(u=>u.u!=='DE');
+  const newAsgn = assignable.filter(u=>{
+    const ck = document.getElementById('mack-'+u.u);
+    return ck && ck.checked;
+  }).map(u=>({
+    u:u.u, d:u.d,
+    s: l.asgn.find(a=>a.u===u.u)?.s || 'pending',
+    seen: l.asgn.find(a=>a.u===u.u)?.seen || null
+  }));
+  updateInLetter(id, {asgn:newAsgn});
+  showToast('Assignees updated.','ok');
+  closeModal();
+};
+
+window.openAddFilesModal = function(id){
+  const {appState} = getState();
+  const l = appState.inL.find(x=>x.id===id);
+  if(!l) return;
+  showModal('📎 Add More Files', `
+    ${fileUploaderHTML('af-files')}
+    <div style="margin-top:10px">
+      <input class="inp" id="af-drivelink" placeholder="Optional: Paste Google Drive file link…"/>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAddFiles('${id}')">Add Files</button>
+    </div>
+  `);
+};
+
+window.saveAddFiles = function(id){
+  const {appState} = getState();
+  const l = appState.inL.find(x=>x.id===id);
+  if(!l) return;
+  const newFiles = window._uploadFiles?.['af-files'] || [];
+  const driveLink = document.getElementById('af-drivelink')?.value.trim();
+  const extras = [...newFiles];
+  if(driveLink) extras.push({fn:'Drive Link', driveUrl:driveLink, isDriveLink:true});
+  if(!extras.length){ showToast('No files to add.','err'); return; }
+  updateInLetter(id, {attachments:[...(l.attachments||[]),...extras]});
+  showToast('Files added.','ok');
+  closeModal();
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EDIT IN LETTER (for CC/DE)
+// ═══════════════════════════════════════════════════════════════════════════
+window.openEditIn = function(id){
+  const {appState, user, users} = getState();
+  const l = appState.inL.find(x=>x.id===id);
+  if(!l) return;
+  const isDE = user.r==='DE';
+  const assignable = users.filter(u=>u.u!=='DE');
+
+  showModal('✏ Edit Incoming Letter', `
+    <div class="g2">
+      <div class="fg"><label class="lbl">Reference No</label>
+        <input class="inp" id="ei-ref" value="${escAttr(l.ref)}"/>
+      </div>
+      <div class="fg"><label class="lbl">Date Received</label>
+        <input type="date" class="inp" id="ei-date" value="${l.dr}"/>
+      </div>
+      <div class="fg"><label class="lbl">From</label>
+        <select class="inp" id="ei-from" onchange="updateEditFromOther()">
+          ${FROM_OPTS.map(o=>`<option ${l.from===o?'selected':''}>${escHtml(o)}</option>`).join('')}
+          <option ${!FROM_OPTS.includes(l.from)?'selected':''} value="Others">Others</option>
+        </select>
+        <input class="inp" id="ei-fromO" style="margin-top:6px;${FROM_OPTS.includes(l.from)?'display:none':''}" value="${FROM_OPTS.includes(l.from)?'':escAttr(l.from)}" placeholder="Specify…"/>
+      </div>
+      <div class="fg"><label class="lbl">To</label>
+        <select class="inp" id="ei-to">
+          ${TO_IN_OPTS.map(o=>`<option ${l.to===o?'selected':''}>${escHtml(o)}</option>`).join('')}
+          <option ${!TO_IN_OPTS.includes(l.to)?'selected':''}>Others</option>
+        </select>
+      </div>
+      <div class="fg span2"><label class="lbl">Subject</label>
+        <input class="inp" id="ei-subj" value="${escAttr(l.subj)}"/>
+      </div>
+    </div>
+    <div class="fg"><label class="lbl">Description</label>
+      <textarea class="inp" id="ei-desc" style="height:70px;resize:vertical">${escHtml(l.desc||'')}</textarea>
+    </div>
+    ${isDE?`<div class="fg"><label class="lbl">DE Note</label>
+      <textarea class="inp" id="ei-note" style="height:60px;resize:vertical">${escHtml(l.note||'')}</textarea>
+    </div>`:''}
+    ${isDE?`<div class="fg"><label class="lbl">Status</label>
+      <select class="inp" id="ei-status">
+        <option value="pending_de" ${l.status==='pending_de'?'selected':''}>Pending DE Review</option>
+        <option value="de_reviewed" ${l.status==='de_reviewed'?'selected':''}>DE Reviewed</option>
+        <option value="ongoing" ${l.status==='ongoing'?'selected':''}>Ongoing</option>
+        <option value="done" ${l.status==='done'?'selected':''}>Done</option>
+      </select>
+    </div>`:''}
+    ${isDE?`<div class="fg"><label class="lbl">Assignees</label>
+      <div style="display:flex;flex-wrap:wrap;margin-top:4px">
+        ${assignable.map(a=>{
+          const isA = l.asgn.some(x=>x.u===a.u);
+          return `<label class="assign-tag ${isA?'sel':''}" id="ei-at-${escAttr(a.u)}" onclick="toggleEIAssign('${escAttr(a.u)}')">
+            <input type="checkbox" style="display:none" id="ei-ck-${escAttr(a.u)}" ${isA?'checked':''}>${escHtml(a.d)}
+          </label>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitEditIn('${id}')">💾 Save Changes</button>
+    </div>
+  `);
+};
+
+window.updateEditFromOther = function(){
+  const sel = document.getElementById('ei-from');
+  const oth = document.getElementById('ei-fromO');
+  if(sel&&oth) oth.style.display = sel.value==='Others' ? 'block' : 'none';
+};
+
+window.toggleEIAssign = function(u){
+  const tag = document.getElementById('ei-at-'+u);
+  const ck  = document.getElementById('ei-ck-'+u);
+  if(!tag||!ck) return;
+  ck.checked = !ck.checked;
+  tag.classList.toggle('sel', ck.checked);
+};
+
+window.submitEditIn = function(id){
+  const {appState, user, users} = getState();
+  const l = appState.inL.find(x=>x.id===id);
+  if(!l) return;
+  const isDE = user.r==='DE';
+  const fromSel = document.getElementById('ei-from')?.value;
+  const from = fromSel==='Others' ? document.getElementById('ei-fromO')?.value.trim() : fromSel;
+  const patch = {
+    ref:   document.getElementById('ei-ref')?.value.trim() || l.ref,
+    dr:    document.getElementById('ei-date')?.value || l.dr,
+    from,
+    to:    document.getElementById('ei-to')?.value || l.to,
+    subj:  document.getElementById('ei-subj')?.value.trim() || l.subj,
+    desc:  document.getElementById('ei-desc')?.value.trim(),
+  };
+  if(isDE){
+    patch.note   = document.getElementById('ei-note')?.value.trim();
+    patch.status = document.getElementById('ei-status')?.value;
+    const assignable = users.filter(u=>u.u!=='DE');
+    patch.asgn = assignable.filter(u=>{
+      const ck = document.getElementById('ei-ck-'+u.u);
+      return ck && ck.checked;
+    }).map(u=>({
+      u:u.u, d:u.d,
+      s: l.asgn.find(a=>a.u===u.u)?.s || 'pending',
+      seen: l.asgn.find(a=>a.u===u.u)?.seen || null
+    }));
+  }
+  updateInLetter(id, patch);
+  showToast('Letter updated.','ok');
+  closeModal();
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UPLOAD OUT LETTER
+// ═══════════════════════════════════════════════════════════════════════════
+window.openUploadOut = function(){
+  const {appState} = getState();
+  showModal('📤 Upload Outgoing Letter', `
+    <div class="g2">
+      <div class="fg"><label class="lbl">Reference No <span style="color:var(--text3)">(auto if blank)</span></label>
+        <input class="inp" id="uo-ref" placeholder="${makeRef('Out', appState.outC)}"/>
+      </div>
+      <div class="fg"><label class="lbl">Date Sent *</label>
+        <input type="date" class="inp" id="uo-date" value="${new Date().toISOString().slice(0,10)}"/>
+      </div>
+      <div class="fg"><label class="lbl">From</label>
+        <input class="inp" value="DE Battaramulla" readonly style="background:var(--surface2);color:var(--text3)"/>
+      </div>
+      <div class="fg"><label class="lbl">To *</label>
+        <select class="inp" id="uo-to" onchange="toggleOther('uo-toO','uo-to')">
+          <option value="">— Select —</option>
+          ${OUT_TO_OPTS.map(o=>`<option>${escHtml(o)}</option>`).join('')}
+        </select>
+        <input class="inp" id="uo-toO" style="display:none;margin-top:6px" placeholder="Specify…"/>
+      </div>
+      <div class="fg span2"><label class="lbl">Subject *</label>
+        <input class="inp" id="uo-subj"/>
+      </div>
+    </div>
+    <div class="fg"><label class="lbl">Description</label>
+      <textarea class="inp" id="uo-desc" style="height:70px;resize:vertical"></textarea>
+    </div>
+    <div class="fg">
+      <label class="lbl">Attachments</label>
+      ${fileUploaderHTML('uo-files')}
+      <input class="inp" id="uo-drivelink" style="margin-top:6px" placeholder="Optional: Paste Google Drive file link…"/>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitUploadOut()">Upload</button>
+    </div>
+  `);
+};
+
+window.submitUploadOut = function(){
+  const {appState, user} = getState();
+  const ref  = document.getElementById('uo-ref')?.value.trim() || makeRef('Out', appState.outC);
+  const date = document.getElementById('uo-date')?.value;
+  const toSel = document.getElementById('uo-to')?.value;
+  const toO   = document.getElementById('uo-toO')?.value.trim();
+  const subj  = document.getElementById('uo-subj')?.value.trim();
+  const desc  = document.getElementById('uo-desc')?.value.trim();
+  const driveLink = document.getElementById('uo-drivelink')?.value.trim();
+  if(!date||!toSel||!subj){ showToast('Fill required: Date, To, Subject','err'); return; }
+  const to = toSel==='Others'?toO:toSel;
+  const files = window._uploadFiles?.['uo-files'] || [];
+  const attachments = [...files];
+  if(driveLink) attachments.push({fn:'Drive Link', driveUrl:driveLink, isDriveLink:true});
+  const letter = {
+    id:uid(), ref, ds:date, du:new Date().toISOString(), by:user.u,
+    from:'DE Battaramulla', to, subj, desc, attachments
+  };
+  addOutLetter(letter);
+  closeModal();
+};
+
+window.openViewOut = function(id){
+  const {appState} = getState();
+  const l = appState.outL.find(x=>x.id===id);
+  if(!l) return;
+  showModal(`📤 ${l.ref}`, `
+    <div class="g2">
+      <div><div class="lbl">Reference No</div><div style="font-family:var(--mono);font-size:13px;font-weight:600">${escHtml(l.ref)}</div></div>
+      <div><div class="lbl">Date Sent</div><div>${fmtDate(l.ds)}</div></div>
+      <div><div class="lbl">From</div><div>${escHtml(l.from)}</div></div>
+      <div><div class="lbl">To</div><div>${escHtml(l.to)}</div></div>
+      <div><div class="lbl">Uploaded By</div><div>${escHtml(l.by)}</div></div>
+      <div><div class="lbl">Date Uploaded</div><div>${fmtDT(l.du)}</div></div>
+    </div>
+    <div style="margin-bottom:12px"><div class="lbl">Subject</div><div style="font-weight:600">${escHtml(l.subj)}</div></div>
+    ${l.desc?`<div style="margin-bottom:12px"><div class="lbl">Description</div><div style="color:var(--text2)">${escHtml(l.desc)}</div></div>`:''}
+    ${buildAttachmentsView(l.attachments)}
+    <div style="display:flex;justify-content:flex-end;margin-top:14px">
+      <button class="btn btn-ghost" onclick="closeModal()">Close</button>
+    </div>
+  `);
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// USER MANAGEMENT MODALS
+// ═══════════════════════════════════════════════════════════════════════════
+window.openEditUser = function(username){
+  const u = getState().users.find(x=>x.u===username);
+  if(!u) return;
+  showModal(`✏ Edit User: ${u.d}`, `
+    <div class="fg"><label class="lbl">Username (cannot change)</label>
+      <input class="inp" value="${escAttr(u.u)}" readonly style="background:var(--surface2);color:var(--text3)"/>
+    </div>
+    <div class="fg"><label class="lbl">Display Name *</label>
+      <input class="inp" id="eu-name" value="${escAttr(u.d)}"/>
+    </div>
+    <div class="fg"><label class="lbl">Role</label>
+      <input class="inp" value="${escAttr(u.r)}" readonly style="background:var(--surface2);color:var(--text3)"/>
+    </div>
+    <div class="g2">
+      <div class="fg"><label class="lbl">New Password <span style="color:var(--text3)">(blank = keep)</span></label>
+        <input class="inp" type="password" id="eu-pw" placeholder="New password…"/>
+      </div>
+      <div class="fg"><label class="lbl">Confirm Password</label>
+        <input class="inp" type="password" id="eu-pw2" placeholder="Repeat…"/>
+      </div>
+    </div>
+    <div id="eu-err"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditUser('${escAttr(u.u)}')">💾 Save</button>
+    </div>
+  `);
+};
+
+window.saveEditUser = function(username){
+  const name = document.getElementById('eu-name')?.value.trim();
+  const pw   = document.getElementById('eu-pw')?.value;
+  const pw2  = document.getElementById('eu-pw2')?.value;
+  const errEl = document.getElementById('eu-err');
+  if(!name){ errEl.innerHTML='<div class="alert alert-err">Display name required.</div>'; return; }
+  if(pw && pw.length<4){ errEl.innerHTML='<div class="alert alert-err">Password must be at least 4 characters.</div>'; return; }
+  if(pw && pw!==pw2){ errEl.innerHTML='<div class="alert alert-err">Passwords do not match.</div>'; return; }
+  const newUsers = getState().users.map(u=>u.u===username?{...u,d:name,...(pw?{pw}:{})}:u);
+  saveUsers(newUsers);
+  closeModal();
+  renderPageContent();
+};
+
+window.openAddUser = function(){
+  showModal('➕ Add New User', `
+    <div class="g2">
+      <div class="fg"><label class="lbl">Username *</label>
+        <input class="inp" id="au-u" placeholder="e.g. MO5"/>
+      </div>
+      <div class="fg"><label class="lbl">Role *</label>
+        <select class="inp" id="au-r">
+          <option value="CC">CC</option><option value="MO">MO</option>
+          <option value="DO">DO</option><option value="STO">STO</option><option value="TO">TO</option>
+        </select>
+      </div>
+      <div class="fg span2"><label class="lbl">Display Name *</label>
+        <input class="inp" id="au-d" placeholder="e.g. Management Officer 5"/>
+      </div>
+      <div class="fg span2"><label class="lbl">Initial Password *</label>
+        <input class="inp" type="password" id="au-pw" placeholder="Set password…"/>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-success" onclick="submitAddUser()">➕ Add User</button>
+    </div>
+  `);
+};
+
+window.submitAddUser = function(){
+  const u  = document.getElementById('au-u')?.value.trim().toUpperCase();
+  const d  = document.getElementById('au-d')?.value.trim();
+  const r  = document.getElementById('au-r')?.value;
+  const pw = document.getElementById('au-pw')?.value;
+  if(!u||!d||!pw){ showToast('Fill all fields.','err'); return; }
+  if(getState().users.find(x=>x.u.toLowerCase()===u.toLowerCase())){
+    showToast('Username already exists.','err'); return;
+  }
+  saveUsers([...getState().users, {u,d,r,pw}]);
+  closeModal();
+  renderPageContent();
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MODAL ENGINE
+// ═══════════════════════════════════════════════════════════════════════════
+function showModal(title, body, maxW='780px'){
+  const mc = document.getElementById('modal-container');
+  if(!mc) return;
+  mc.innerHTML = `
+  <div class="overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal" style="max-width:${maxW}">
+      <div class="modal-hd">
+        <span class="modal-title">${title}</span>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">${body}</div>
+    </div>
+  </div>`;
+  // Init file uploaders in modal
+  setTimeout(()=>initFileUploaders(), 50);
+}
+
+window.closeModal = function(){
+  const mc = document.getElementById('modal-container');
+  if(mc) mc.innerHTML = '';
+  window._uploadFiles = window._uploadFiles || {};
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FILE UPLOADER
+// ═══════════════════════════════════════════════════════════════════════════
+window._uploadFiles = {};
+
+function fileUploaderHTML(id){
+  return `<div class="drop-zone" id="dz-${id}" onclick="document.getElementById('fi-${id}').click()">
+    <div class="drop-icon">📁</div>
+    <div class="drop-text">Click or drag &amp; drop files</div>
+    <div class="drop-hint">Images, PDFs — multiple allowed</div>
+    <input type="file" id="fi-${id}" multiple accept="image/*,.pdf,.doc,.docx" style="display:none"
+      onchange="handleFileInput('${id}',this.files)"/>
+  </div>
+  <div id="chips-${id}" style="margin-top:6px;display:flex;flex-wrap:wrap"></div>`;
+}
+
+function initFileUploaders(){
+  document.querySelectorAll('[id^="dz-"]').forEach(dz=>{
+    const id = dz.id.replace('dz-','');
+    if(!window._uploadFiles[id]) window._uploadFiles[id] = [];
+    dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('drag'); });
+    dz.addEventListener('dragleave', ()=>dz.classList.remove('drag'));
+    dz.addEventListener('drop', e=>{ e.preventDefault(); dz.classList.remove('drag'); handleFileInput(id, e.dataTransfer.files); });
+  });
+}
+
+window.handleFileInput = function(id, flist){
+  if(!window._uploadFiles) window._uploadFiles = {};
+  if(!window._uploadFiles[id]) window._uploadFiles[id] = [];
+  Array.from(flist).forEach(file=>{
+    const r = new FileReader();
+    r.onload = ev => {
+      window._uploadFiles[id].push({
+        fd: ev.target.result.split(',')[1],
+        fn: file.name,
+        ft: file.type
+      });
+      updateChips(id);
+    };
+    r.readAsDataURL(file);
+  });
+};
+
+function updateChips(id){
+  const chips = document.getElementById('chips-'+id);
+  if(!chips) return;
+  const files = window._uploadFiles[id] || [];
+  chips.innerHTML = files.map((f,i)=>`
+    <span class="file-chip">
+      ${f.ft?.startsWith('image/')?'🖼':'📄'} ${escHtml(f.fn)}
+      <button class="file-chip-rm" onclick="removeFile('${id}',${i})">×</button>
+    </span>`).join('');
+}
+
+window.removeFile = function(id, i){
+  if(window._uploadFiles?.[id]){ window._uploadFiles[id].splice(i,1); updateChips(id); }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ATTACHMENTS VIEW
+// ═══════════════════════════════════════════════════════════════════════════
+function buildAttachmentsView(attachments){
+  if(!attachments || !attachments.length) return '';
+  return `<div style="margin:12px 0">
+    <div style="font-weight:700;color:var(--navy);font-size:12px;margin-bottom:8px">📎 Attachments (${attachments.length})</div>
+    <div style="display:grid;gap:8px">
+      ${attachments.map((att,i)=>{
+        if(att.isDriveLink || att.driveUrl){
+          return `<div style="border:1px solid var(--border2);border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:12px;background:var(--surface2)">
+            <span style="font-size:24px">🔗</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600">${escHtml(att.fn||'Drive File')}</div>
+              <div style="font-size:11px;color:var(--text3)">Google Drive Link</div>
             </div>
+            <a href="${escAttr(att.driveUrl||att.fileUrl||'')}" target="_blank" class="btn btn-success btn-sm">Open in Drive</a>
+          </div>`;
+        }
+        if(att.fileUrl || att.fileId){
+          const previewSrc = att.fileId
+            ? `https://drive.google.com/file/d/${att.fileId}/preview`
+            : (att.fileUrl?.match(/\/d\/([^/]+)/)?.[1]
+                ? `https://drive.google.com/file/d/${att.fileUrl.match(/\/d\/([^/]+)/)[1]}/preview`
+                : att.fileUrl);
+          return `<div style="border:1px solid var(--border2);border-radius:var(--r);overflow:hidden">
+            <iframe src="${escAttr(previewSrc)}" style="width:100%;height:220px;border:none;background:#f8f9fb"></iframe>
+            <div style="padding:8px 12px;background:var(--surface2);display:flex;gap:10px;align-items:center">
+              <span style="font-size:12px;color:var(--text2)">📎 ${escHtml(att.fn||`File ${i+1}`)}</span>
+              <a href="${escAttr(previewSrc)}" target="_blank" class="btn btn-primary btn-sm">Full View</a>
+            </div>
+          </div>`;
+        }
+        if(!att.fd) return '';
+        const src = `data:${att.ft};base64,${att.fd}`;
+        return `<div style="border:1px solid var(--border2);border-radius:var(--r);overflow:hidden">
+          ${att.ft?.startsWith('image/')
+            ? `<img src="${src}" alt="${escAttr(att.fn)}" style="max-width:100%;max-height:280px;display:block;object-fit:contain;background:#f8f9fb"/>`
+            : att.ft==='application/pdf'
+            ? `<iframe src="${src}" style="width:100%;height:240px;border:none" title="${escAttr(att.fn)}"></iframe>`
+            : `<div style="padding:12px;color:var(--text2);background:var(--surface2)">📄 ${escHtml(att.fn)} — preview not available</div>`
+          }
+          <div style="padding:8px 12px;background:var(--surface2);display:flex;gap:10px;align-items:center">
+            <span style="font-size:12px;color:var(--text2)">📎 ${escHtml(att.fn)}</span>
+            <a href="${src}" download="${escAttr(att.fn)}" class="btn btn-primary btn-sm">⬇ Download</a>
           </div>
-          <div className="fr">
-            <button className="btn bp bsm" onClick={()=>openEdit(u)}>✏️ Edit</button>
-            {u.u!==currentUser.u&&<button className="btn bdanger bsm" onClick={()=>removeUser(u)}>🗑</button>}
-          </div>
-        </div>)}
-      </div>;
-    })}
-
-    {editUser&&<Mod title={`Edit User: ${editUser.d}`} onClose={()=>setEditUser(null)}>
-      <div className="fg"><label className="flb">Display Name</label>
-        <input className="fi" value={newDName} onChange={e=>setNewDName(e.target.value)} placeholder="Full name/title"/>
-      </div>
-      <div className="fg"><label className="flb">Username (cannot change)</label>
-        <input className="fi" value={editUser.u} readOnly style={{background:'#f5f5f5',color:'#888'}}/>
-      </div>
-      <div className="fg"><label className="flb">Role</label>
-        <input className="fi" value={editUser.r} readOnly style={{background:'#f5f5f5',color:'#888'}}/>
-      </div>
-      <div className="g2">
-        <div className="fg"><label className="flb">New Password <span style={{color:'#aaa',fontWeight:400}}>(leave blank to keep)</span></label>
-          <input className="fi" type="password" value={newPw} onChange={e=>setNewPw(e.target.value)} placeholder="New password…"/>
-        </div>
-        <div className="fg"><label className="flb">Confirm Password</label>
-          <input className="fi" type="password" value={newPw2} onChange={e=>setNewPw2(e.target.value)} placeholder="Repeat new password…"/>
-        </div>
-      </div>
-      {err&&<div className="ab ae">{err}</div>}
-      {ok&&<div className="ab ag">{ok}</div>}
-      <div className="fr" style={{justifyContent:'flex-end',marginTop:6}}>
-        <button className="btn bs" onClick={()=>setEditUser(null)}>Cancel</button>
-        <button className="btn bp" onClick={saveEdit}>💾 Save Changes</button>
-      </div>
-    </Mod>}
-
-    {showAdd&&<Mod title="Add New User" onClose={()=>setShowAdd(false)}>
-      <div className="g2">
-        <div className="fg"><label className="flb">Username *</label>
-          <input className="fi" value={newU.u} onChange={e=>setNewU(x=>({...x,u:e.target.value}))} placeholder="e.g. MO5"/>
-        </div>
-        <div className="fg"><label className="flb">Role *</label>
-          <select className="fi" value={newU.r} onChange={e=>setNewU(x=>({...x,r:e.target.value}))}>
-            <option value="CC">CC</option><option value="MO">MO</option><option value="DO">DO</option>
-            <option value="STO">STO</option><option value="TO">TO</option>
-          </select>
-        </div>
-        <div className="fg" style={{gridColumn:'span 2'}}><label className="flb">Display Name *</label>
-          <input className="fi" value={newU.d} onChange={e=>setNewU(x=>({...x,d:e.target.value}))} placeholder="e.g. Management Officer 5"/>
-        </div>
-        <div className="fg" style={{gridColumn:'span 2'}}><label className="flb">Password *</label>
-          <input className="fi" type="password" value={newU.pw} onChange={e=>setNewU(x=>({...x,pw:e.target.value}))} placeholder="Set initial password"/>
-        </div>
-      </div>
-      <div className="fr" style={{justifyContent:'flex-end',marginTop:6}}>
-        <button className="btn bs" onClick={()=>setShowAdd(false)}>Cancel</button>
-        <button className="btn bgreen" onClick={addUser}>➕ Add User</button>
-      </div>
-    </Mod>}
-  </div>;
-}
-
-// ─── APP ROOT ─────────────────────────────────────────────────────────────
-function App(){
-  const [user,setUser]=useState(()=>ldSess());
-  const [page,setPage]=useState('dash');
-  const [state,setState]=useState(EMPTY_STATE);
-  const [users,setUsers]=useState(DEFAULT_USERS);
-  const [loading,setLoading]=useState(true);
-  const [saving,setSaving]=useState(false);
-  const [toast,setToast]=useState('');
-  const [toastErr,setToastErr]=useState(false);
-  const [fs,setFS]=useState(undefined);
-
-  // Load persisted state and users on mount
-  useEffect(()=>{
-    let alive=true;
-    Promise.all([
-      storageLoad(STORAGE_KEY_STATE,true),
-      storageLoad(STORAGE_KEY_USERS,true),
-    ]).then(([savedState,savedUsers])=>{
-      if(!alive)return;
-      if(savedState){setState({...EMPTY_STATE,...savedState});}
-      if(savedUsers&&Array.isArray(savedUsers)&&savedUsers.length){setUsers(savedUsers);}
-    }).catch(()=>{
-      // Use defaults if storage fails
-    }).finally(()=>{if(alive)setLoading(false);});
-    return()=>{alive=false;};
-  },[]);
-
-  const showToast=(msg,isErr=false)=>{setToast(msg);setToastErr(isErr);};
-
-  const sv=async(newState,message='Saved.')=>{
-    setState(newState);
-    setSaving(true);
-    try{
-      await storageSave(STORAGE_KEY_STATE,newState,true);
-      showToast(message);
-    }catch{
-      showToast('Save failed — data may not persist.', true);
-    }finally{setSaving(false);}
-  };
-
-  const svUsers=async(newUsers)=>{
-    setUsers(newUsers);
-    setSaving(true);
-    try{
-      await storageSave(STORAGE_KEY_USERS,newUsers,true);
-      showToast('User list saved permanently.');
-    }catch{
-      showToast('Could not save users.', true);
-    }finally{setSaving(false);}
-  };
-
-  const addIn=l=>sv({...state,inL:[...state.inL,l],inC:state.inC+1},'Incoming letter saved permanently.');
-  const updIn=(id,p)=>sv({...state,inL:state.inL.map(l=>l.id===id?{...l,...p}:l)},'Letter updated & saved.');
-  const addOut=l=>sv({...state,outL:[...state.outL,l],outC:state.outC+1},'Outgoing letter saved permanently.');
-
-  const myNotifications=(state.notifications||[]).filter(n=>user&&n.username===user.u);
-  const markMyNotifications=()=>{
-    const updated={...state,notifications:(state.notifications||[]).map(n=>n.username===user.u?{...n,read:true}:n)};
-    sv(updated,'Notifications marked as read.');
-  };
-
-  const login=u=>{setUser(u);svSess(u);setPage('dash');showToast('Signed in successfully.');};
-  const logout=()=>{setUser(null);svSess(null);setPage('dash');};
-
-  if(!user)return <LoginPage onLogin={login} users={users}/>;
-  if(loading)return <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'#f0f2f7',gap:12}}>
-    <div style={{color:'#003580',fontWeight:800,fontSize:16}}>Loading…</div>
-    <div style={{color:'#888',fontSize:13}}>Restoring saved data</div>
-  </div>;
-
-  return <div style={{minHeight:'100vh',background:'#f0f2f7'}}>
-    <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    <Toast message={toast} isErr={toastErr} onClose={()=>setToast('')}/>
-    <SaveIndicator saving={saving}/>
-    <TopNav user={user} page={page} setPage={p=>{setPage(p);setFS(undefined);}} onLogout={logout} notifications={myNotifications} onMarkNotificationsRead={markMyNotifications}/>
-    <div style={{maxWidth:1280,margin:'0 auto',padding:'18px 14px'}}>
-      <div style={{background:'#fff',borderRadius:10,boxShadow:'0 2px 12px rgba(0,0,0,.08)',padding:'20px 22px',minHeight:400}}>
-        {page==='dash'&&<><h2 style={{margin:'0 0 16px',color:'#003580',fontSize:16,fontWeight:800}}>🏠 Dashboard</h2><Dashboard user={user} state={state} setPage={setPage} setFS={setFS}/></>}
-        {page==='in'&&<><h2 style={{margin:'0 0 14px',color:'#003580',fontSize:16,fontWeight:800}}>📥 Incoming Letters</h2><InPage user={user} state={state} onAdd={addIn} onUpd={updIn} fs={fs} setFS={setFS} users={users}/></>}
-        {page==='out'&&!['STO','TO'].includes(user.r)&&<><h2 style={{margin:'0 0 14px',color:'#003580',fontSize:16,fontWeight:800}}>📤 Outgoing Letters</h2><OutPage user={user} state={state} onAdd={addOut}/></>}
-        {page==='rep'&&['DE','CC'].includes(user.r)&&<><h2 style={{margin:'0 0 14px',color:'#003580',fontSize:16,fontWeight:800}}>📊 Reports</h2><RepPage state={state} users={users}/></>}
-        {page==='users'&&user.r==='DE'&&<><h2 style={{margin:'0 0 14px',color:'#003580',fontSize:16,fontWeight:800}}>👤 Manage Users & Passwords</h2><UsersPage users={users} onSaveUsers={svUsers} currentUser={user}/></>}
-      </div>
+        </div>`;
+      }).join('')}
     </div>
-  </div>;
+  </div>`;
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════
+function countFiles(l){
+  return (l.attachments||[]).length || (l.fd ? 1 : 0);
+}
+
+function badge(status){
+  const label = STATUS_LABELS[status] || status;
+  return `<span class="badge badge-${status}">${label}</span>`;
+}
+
+function escHtml(s){
+  if(s==null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function escAttr(s){
+  if(s==null) return '';
+  return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/\\/g,'\\\\');
+}
+
+// Expose for inline handlers
+window.deleteInLetter = deleteInLetter;
+window.deleteOutLetter = deleteOutLetter;
+window.renderPageContent = renderPageContent;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INITIAL RENDER
+// ═══════════════════════════════════════════════════════════════════════════
+render();
 </script>
 </body>
 </html>
